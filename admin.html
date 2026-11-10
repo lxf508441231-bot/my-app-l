@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>官方商城 - 管理员独立控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen p-4 flex items-center justify-center font-sans">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-lg p-5 space-y-6">
+    <div class="max-w-lg w-full bg-white rounded-2xl shadow-lg p-6 space-y-6">
         <div class="flex items-center justify-between border-b pb-4">
             <div class="flex items-center space-x-2">
                 <span class="text-xl">🛡️</span>
@@ -19,122 +20,130 @@
         <!-- 1. 修改指定用户余额 -->
         <div class="space-y-3">
             <label class="text-xs font-bold text-gray-700 block">1. 修改指定用户余额 (USDT)</label>
-            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-blue-500" placeholder="输入用户的 Telegram UID">
+            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border rounded-xl p-3 text-xs font-mono" placeholder="输入用户的 Telegram UID">
             <div class="flex gap-2">
-                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额数字">
-                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition active:scale-95 shadow">确认修改</button>
+                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border rounded-xl p-3 text-sm font-bold" placeholder="新余额数字">
+                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 text-white px-5 py-3 rounded-xl text-xs font-bold">确认修改</button>
             </div>
         </div>
 
-        <!-- 2. 全网用户充值申请审核 -->
+        <!-- 2. 全网充值与兑换订单审核 (云端联网实时同步) -->
         <div class="space-y-3 pt-3 border-t">
             <div class="flex justify-between items-center">
-                <label class="text-xs font-bold text-gray-700">2. 全网用户充值申请审核 <span id="pendingCount" class="text-red-500 font-bold"></span></label>
+                <label class="text-xs font-bold text-gray-700">2. 全网用户充值与兑换订单审核 <span id="pendingCount" class="text-red-500 font-bold"></span></label>
                 <div class="flex gap-2">
-                    <button type="button" onclick="addTestOrder()" class="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2.5 py-1.5 rounded-lg font-medium transition">+ 模拟测试</button>
-                    <button type="button" onclick="loadAdminAuditList()" class="text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition">🔄 刷新</button>
+                    <button type="button" onclick="loadAdminOrders()" class="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-lg font-medium">🔄 刷新列表</button>
                 </div>
             </div>
-            <div id="adminDepositAuditList" class="space-y-2.5 max-h-80 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在联网同步全网充值订单...</div>
+            <div id="adminOrdersList" class="space-y-3 max-h-96 overflow-y-auto">
+                <div class="text-center py-6 text-xs text-gray-400">正在联网同步全网订单...</div>
             </div>
         </div>
     </div>
 
     <script>
+        const BIN_ID = "6af2b32cac6210605a7c00d8";
+        const API_KEY = "$2a$10$7bEzkP8SMoaSgkbiFa7a2uU0O/STCDvsxPy/XtAO5Hh7gxT/iSHpG";
+        let cloudData = { orders: [], balances: {} };
+
         window.onload = function() {
-            loadAdminAuditList();
-            // 每隔 3 秒自动联网轮询云端全网订单
-            setInterval(loadAdminAuditList, 3000);
+            loadAdminOrders();
+            setInterval(loadAdminOrders, 3000); // 每 3 秒自动联网轮询全网
         };
 
-        function loadAdminAuditList() {
-            const container = document.getElementById('adminDepositAuditList');
+        async function loadAdminOrders() {
+            const container = document.getElementById('adminOrdersList');
             try {
-                let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
-                let pending = cloudData.orders.filter(o => o.status === 'pending' && o.type === 'deposit');
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if (res.ok) {
+                    let json = await res.json();
+                    cloudData = json.record || { orders: [], balances: {} };
+                    
+                    let pending = cloudData.orders.filter(o => o.status === 'pending');
+                    document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
 
-                document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
+                    if (!pending || pending.length === 0) {
+                        container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的订单<br><span class="text-[10px] text-gray-300">（任何设备的手机前台提交后将在此处实时显示）</span></div>`;
+                        return;
+                    }
 
-                if (!pending || pending.length === 0) {
-                    container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的充值订单<br><span class="text-[10px] text-gray-300">（任何设备的前端提交后会自动显示在此处）</span></div>`;
-                    return;
+                    container.innerHTML = pending.map((item) => `
+                        <div class="p-3.5 bg-gray-50 rounded-xl text-xs space-y-2 border shadow-sm">
+                            <div class="flex justify-between font-bold text-gray-700">
+                                <span>类型: ${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
+                                <span class="text-blue-600">${item.amount} USDT</span>
+                            </div>
+                            <div class="text-[10px] text-gray-400">UID: ${item.uid} | 时间: ${item.time}</div>
+                            ${item.type === 'exchange' ? `<div class="text-[11px] text-indigo-600 font-bold">兑换获取: ${item.getU} 博彩U</div>` : ''}
+                            
+                            <div class="flex gap-2 pt-1">
+                                ${item.type === 'deposit' ? `
+                                    <button onclick="approveDeposit('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition">通过并加余额</button>
+                                ` : `
+                                    <button onclick="approveExchange('${item.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition">同意兑换</button>
+                                    <button onclick="rejectExchange('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold transition">不同意(风控拦截)</button>
+                                `}
+                                <button onclick="removeOrder('${item.id}')" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded-lg font-bold transition">删除</button>
+                            </div>
+                        </div>
+                    `).join('');
                 }
-
-                container.innerHTML = pending.map((item) => `
-                    <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border border-gray-200 shadow-sm">
-                        <div class="flex justify-between font-bold text-gray-700">
-                            <span>UID: ${item.uid || '未知'}</span>
-                            <span class="text-blue-600 font-bold text-sm">${item.amount} USDT</span>
-                        </div>
-                        <div class="text-[10px] text-gray-400">提交时间: ${item.time || '刚刚'}</div>
-                        <div class="flex gap-2 pt-1">
-                            <button type="button" onclick="approveOrder('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-xs font-bold transition active:scale-95">通过并加余额</button>
-                            <button type="button" onclick="rejectOrder('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition active:scale-95">拒绝</button>
-                        </div>
-                    </div>
-                `).join('');
             } catch (e) {
-                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">云端数据读取异常</div>`;
+                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">云端联网读取异常</div>`;
             }
         }
 
-        function addTestOrder() {
-            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
-            cloudData.orders.unshift({
-                id: 'DEP' + Date.now().toString().slice(-6),
-                uid: 'user_demo_001',
-                type: 'deposit',
-                amount: 100,
-                status: 'pending',
-                time: new Date().toLocaleString()
+        async function pushCloud() {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(cloudData)
             });
-            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
-            loadAdminAuditList();
-            alert("已成功模拟添加一条全网测试订单！");
         }
 
-        function approveOrder(orderId, uid, amount) {
-            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
+        async function approveDeposit(orderId, uid, amount) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
+            let cur = parseFloat(cloudData.balances[uid]) || 0;
+            cloudData.balances[uid] = cur + amount;
             
-            // 更新订单状态
-            cloudData.orders = cloudData.orders.map(o => { 
-                if(o.id === orderId) o.status = 'success'; 
-                return o; 
-            });
-
-            // 增加用户的云端余额
-            let currentBal = parseFloat(cloudData.balances[uid]) || 0;
-            let newBal = currentBal + amount;
-            cloudData.balances[uid] = newBal;
-
-            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
-
-            alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！该用户的前端将在 3 秒内自动增加余额。`);
-            loadAdminAuditList();
+            await pushCloud();
+            alert(`已通过充值并为用户加额 ${amount} USDT！`);
+            loadAdminOrders();
         }
 
-        function rejectOrder(orderId) {
-            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
-            cloudData.orders = cloudData.orders.map(o => { 
-                if(o.id === orderId) o.status = 'rejected'; 
-                return o; 
-            });
-            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
-            loadAdminAuditList();
-            alert("已拒绝该笔充值申请");
+        async function approveExchange(orderId) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
+            await pushCloud();
+            alert("已同意该笔兑换订单！");
+            loadAdminOrders();
         }
 
-        function saveTargetUserBalance() {
+        async function rejectExchange(orderId) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
+            await pushCloud();
+            alert("已触发风控拦截！用户端订单详情将显示红底状态异常提示。");
+            loadAdminOrders();
+        }
+
+        async function removeOrder(orderId) {
+            cloudData.orders = cloudData.orders.filter(o => o.id !== orderId);
+            await pushCloud();
+            loadAdminOrders();
+        }
+
+        async function saveTargetUserBalance() {
             const uid = document.getElementById('adminTargetUser').value.trim();
             const bal = parseFloat(document.getElementById('adminTargetBalance').value);
-            if (!uid || isNaN(bal)) { alert("请输入正确的 UID 和余额数字！"); return; }
+            if (!uid || isNaN(bal)) { alert("请输入正确的UID和数字"); return; }
 
-            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
             cloudData.balances[uid] = bal;
-            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
-
-            alert(`已成功将云端用户 [${uid}] 余额修改为 ${bal.toFixed(2)} USDT！`);
+            await pushCloud();
+            alert(`已成功将云端用户 [${uid}] 余额修改为 ${bal}`);
         }
     </script>
 </body>
