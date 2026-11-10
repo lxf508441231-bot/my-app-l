@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>官方商城 - 管理员独立控制台</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen p-4 flex items-center justify-center font-sans">
     <div class="max-w-md w-full bg-white rounded-2xl shadow-lg p-5 space-y-6">
@@ -20,23 +19,23 @@
         <!-- 1. 修改指定用户余额 -->
         <div class="space-y-3">
             <label class="text-xs font-bold text-gray-700 block">1. 修改指定用户余额 (USDT)</label>
-            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border rounded-xl p-3 text-xs font-mono" placeholder="输入用户的 Telegram UID">
+            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-blue-500" placeholder="输入用户的 Telegram UID">
             <div class="flex gap-2">
-                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border rounded-xl p-3 text-sm font-bold" placeholder="新余额数字">
-                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 text-white px-5 py-3 rounded-xl text-xs font-bold">确认修改</button>
+                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额数字">
+                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition active:scale-95 shadow">确认修改</button>
             </div>
         </div>
 
-        <!-- 2. 全网充值与兑换订单审核 -->
+        <!-- 2. 全网用户充值申请审核 -->
         <div class="space-y-3 pt-3 border-t">
             <div class="flex justify-between items-center">
                 <label class="text-xs font-bold text-gray-700">2. 全网用户充值申请审核</label>
-                <button onclick="loadAdminAuditList()" class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
-                    <i class="fa-solid fa-rotate"></i> 刷新列表
+                <button type="button" onclick="loadAdminAuditList()" class="text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition">
+                    🔄 刷新列表
                 </button>
             </div>
             <div id="adminDepositAuditList" class="space-y-2.5 max-h-80 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在加载全网订单...</div>
+                <div class="text-center py-6 text-xs text-gray-400">正在获取最新充值申请...</div>
             </div>
         </div>
     </div>
@@ -44,60 +43,93 @@
     <script>
         window.onload = function() {
             loadAdminAuditList();
-            // 每隔 5 秒自动刷新一次，实现全网实时监控
-            setInterval(loadAdminAuditList, 5000);
         };
 
         function loadAdminAuditList() {
             const container = document.getElementById('adminDepositAuditList');
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
-            let pending = orders.filter(o => o.status === 'pending' && o.type === 'deposit');
+            try {
+                let rawData = localStorage.getItem('global_network_orders') || localStorage.getItem('global_deposit_orders');
+                let orders = rawData ? JSON.parse(rawData) : [];
+                
+                // 过滤出待审核的充值申请
+                let pending = orders.filter(o => o.status === 'pending');
 
-            if (pending.length === 0) {
-                container.innerHTML = `<div class="text-xs text-gray-400 text-center py-4">当前没有待审核订单</div>`;
-                return;
+                if (!pending || pending.length === 0) {
+                    container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的充值订单</div>`;
+                    return;
+                }
+
+                container.innerHTML = pending.map((item) => `
+                    <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border border-gray-200">
+                        <div class="flex justify-between font-bold text-gray-700">
+                            <span>用户UID: ${item.uid || '未知用户'}</span>
+                            <span class="text-blue-600 font-bold">${item.amount} USDT</span>
+                        </div>
+                        <div class="text-[10px] text-gray-400">提交时间: ${item.time || '刚刚'}</div>
+                        <div class="flex gap-2 pt-1">
+                            <button type="button" onclick="approveOrder('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-xs font-bold transition active:scale-95">确认到账并加余额</button>
+                            <button type="button" onclick="rejectOrder('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition active:scale-95">拒绝</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">读取订单数据异常</div>`;
             }
-
-            container.innerHTML = pending.map((item) => `
-                <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border">
-                    <div class="flex justify-between font-bold text-gray-700">
-                        <span>UID: ${item.uid}</span>
-                        <span class="text-blue-600">${item.amount} USDT</span>
-                    </div>
-                    <div class="text-[10px] text-gray-400">时间: ${item.time}</div>
-                    <div class="flex gap-2 pt-1">
-                        <button onclick="approveOrder('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 text-white py-2 rounded-lg text-xs font-bold">通过并加余额</button>
-                        <button onclick="rejectOrder('${item.id}')" class="flex-1 bg-red-600 text-white py-2 rounded-lg text-xs font-bold">拒绝</button>
-                    </div>
-                </div>
-            `).join('');
         }
 
         function approveOrder(orderId, uid, amount) {
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
-            orders = orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
-            localStorage.setItem('global_network_orders', JSON.stringify(orders));
+            try {
+                let rawData = localStorage.getItem('global_network_orders') || localStorage.getItem('global_deposit_orders');
+                let orders = rawData ? JSON.parse(rawData) : [];
+                
+                orders = orders.map(o => { 
+                    if(o.id === orderId) o.status = 'success'; 
+                    return o; 
+                });
+                
+                localStorage.setItem('global_network_orders', JSON.stringify(orders));
+                localStorage.setItem('global_deposit_orders', JSON.stringify(orders));
 
-            let currentBal = parseFloat(localStorage.getItem('balance_' + uid)) || 0;
-            localStorage.setItem('balance_' + uid, currentBal + amount);
+                // 增加用户余额
+                let currentBal = parseFloat(localStorage.getItem('balance_' + uid)) || 0;
+                localStorage.setItem('balance_' + uid, currentBal + amount);
 
-            alert(`已成功为用户 [${uid}] 增加 ${amount} USDT！`);
-            loadAdminAuditList();
+                alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！`);
+                loadAdminAuditList();
+            } catch (e) {
+                alert("操作失败：" + e.message);
+            }
         }
 
         function rejectOrder(orderId) {
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
-            orders = orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
-            localStorage.setItem('global_network_orders', JSON.stringify(orders));
-            loadAdminAuditList();
+            try {
+                let rawData = localStorage.getItem('global_network_orders') || localStorage.getItem('global_deposit_orders');
+                let orders = rawData ? JSON.parse(rawData) : [];
+                
+                orders = orders.map(o => { 
+                    if(o.id === orderId) o.status = 'rejected'; 
+                    return o; 
+                });
+                
+                localStorage.setItem('global_network_orders', JSON.stringify(orders));
+                localStorage.setItem('global_deposit_orders', JSON.stringify(orders));
+                
+                alert("已拒绝该笔充值申请");
+                loadAdminAuditList();
+            } catch (e) {
+                alert("操作失败：" + e.message);
+            }
         }
 
         function saveTargetUserBalance() {
-            const uid = document.getElementById('adminTargetUser'].value.trim();
+            const uid = document.getElementById('adminTargetUser').value.trim();
             const bal = parseFloat(document.getElementById('adminTargetBalance').value);
-            if (!uid || isNaN(bal)) { alert("请输入正确的UID和金额"); return; }
+            if (!uid || isNaN(bal)) { 
+                alert("请输入正确的用户 UID 和余额数字！"); 
+                return; 
+            }
             localStorage.setItem('balance_' + uid, bal);
-            alert(`已成功将用户 [${uid}] 余额修改为 ${bal} USDT`);
+            alert(`已成功将用户 [${uid}] 的账户余额修改为 ${bal.toFixed(2)} USDT！`);
         }
     </script>
 </body>
