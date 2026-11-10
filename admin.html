@@ -57,4 +57,220 @@
     <!-- 弹窗：所有历史充值与兑换记录面板 -->
     <div id="historyModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 space-y-4 max-h-[90vh] flex flex-col">
-            <div
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-sm text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> 全网历史订单流（充值与兑换）
+                </h3>
+                <button onclick="closeAllHistoryModal()" class="text-gray-400 hover:text-gray-700 font-bold text-base px-2 cursor-pointer">✕</button>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="historySearchInput" oninput="renderHistoryList()" placeholder="🔍 在历史记录中按 UID 或 订单号检索..." class="w-full bg-gray-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-indigo-500">
+            </div>
+            <div id="historyModalContent" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
+                <div class="text-center py-8 text-xs text-gray-400">正在加载历史记录...</div>
+            </div>
+            <div class="pt-2 border-t text-right">
+                <button onclick="closeAllHistoryModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl text-xs font-bold cursor-pointer">关闭窗口</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BIN_ID = "6af2b32cac6210605a7c00d8";
+        const API_KEY = "$2a$10$7bEzkP8SMoaSgkbiFa7a2uU0O/STCDvsxPy/XtAO5Hh7gxT/iSHpG";
+        let cloudData = { orders: [], balances: {} };
+
+        window.onload = function() {
+            loadAdminOrders();
+            setInterval(loadAdminOrders, 4000);
+        };
+
+        async function loadAdminOrders() {
+            const container = document.getElementById('adminOrdersList');
+            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+
+            try {
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if (res.ok) {
+                    let json = await res.json();
+                    cloudData = json.record || { orders: [], balances: {} };
+                    
+                    let pending = cloudData.orders.filter(o => o.status === 'pending');
+                    
+                    if (keyword) {
+                        pending = pending.filter(o => 
+                            String(o.uid).toLowerCase().includes(keyword) || 
+                            String(o.ip).toLowerCase().includes(keyword) ||
+                            String(o.name).toLowerCase().includes(keyword)
+                        );
+                    }
+
+                    document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
+
+                    if (!pending || pending.length === 0) {
+                        container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有符合条件的待审核订单</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = pending.map((item) => `
+                        <div class="p-3.5 bg-gray-50 rounded-xl text-xs space-y-2.5 border shadow-sm">
+                            <div class="flex justify-between font-bold text-gray-700">
+                                <span>类型: ${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
+                                <span class="text-blue-600 font-bold text-sm">${item.amount} USDT</span>
+                            </div>
+
+                            <div class="bg-white p-2.5 rounded-lg border border-gray-100 space-y-1 text-[11px] font-mono text-gray-600">
+                                <div class="flex justify-between items-center">
+                                    <span>TG昵称: <strong class="text-gray-800">${item.name || '未知'}</strong></span>
+                                    <button onclick="quickFillUid('${item.uid}')" class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded hover:bg-blue-100 font-sans cursor-pointer">快速填入修改栏</button>
+                                </div>
+                                <div>Telegram UID: <strong class="text-blue-600 select-all">${item.uid}</strong></div>
+                                <div>网络 IP: <span class="text-gray-800">${item.ip || '记录中...'}</span></div>
+                                <div class="text-[10px] text-gray-400 truncate" title="${item.device}">设备: ${item.device || '未知设备'}</div>
+                            </div>
+
+                            <div class="text-[10px] text-gray-400">提交时间: ${item.time}</div>
+                            ${item.type === 'exchange' ? `<div class="text-[11px] text-indigo-600 font-bold">兑换获取: ${item.getU} 博彩U</div>` : ''}
+                            
+                            <div class="flex gap-2 pt-1">
+                                ${item.type === 'deposit' ? `
+                                    <button onclick="approveDeposit('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition cursor-pointer">通过并加余额</button>
+                                ` : `
+                                    <button onclick="approveExchange('${item.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition cursor-pointer">同意兑换</button>
+                                    <button onclick="rejectExchange('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold transition cursor-pointer">不同意(风控)</button>
+                                `}
+                                <button onclick="removeOrder('${item.id}')" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded-lg font-bold transition cursor-pointer">删除</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">云端联网读取异常</div>`;
+            }
+        }
+
+        // 打开历史记录弹窗
+        function openAllHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                renderHistoryList();
+            }
+        }
+
+        // 关闭历史记录弹窗
+        function closeAllHistoryModal() {
+            const modal = document.getElementById('historyModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // 渲染历史记录列表
+        function renderHistoryList() {
+            const content = document.getElementById('historyModalContent');
+            const searchInput = document.getElementById('historySearchInput');
+            if (!content) return;
+
+            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            let orders = cloudData.orders || [];
+
+            if (query) {
+                orders = orders.filter(o => 
+                    String(o.uid).toLowerCase().includes(query) || 
+                    String(o.id).toLowerCase().includes(query) ||
+                    String(o.name).toLowerCase().includes(query)
+                );
+            }
+
+            if (orders.length === 0) {
+                content.innerHTML = `<div class="text-center py-8 text-xs text-gray-400">暂无任何历史订单记录</div>`;
+                return;
+            }
+
+            content.innerHTML = orders.map(item => `
+                <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-1.5 border">
+                    <div class="flex justify-between font-bold">
+                        <span>${item.type === 'deposit' ? '📥 充值' : '🔄 兑换'} (${item.id})</span>
+                        <span class="${item.status === 'success' ? 'text-green-600' : item.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}">
+                            ${item.status === 'success' ? '已完成' : item.status === 'pending' ? '审核/兑换中' : '已风控拦截'}
+                        </span>
+                    </div>
+                    <div class="text-gray-500 font-mono text-[11px]">
+                        UID: <strong class="text-blue-600 select-all">${item.uid}</strong> | 金额: <strong class="text-gray-800">${item.amount} USDT</strong>
+                        ${item.type === 'exchange' ? ` | 获得: <strong class="text-indigo-600">${item.getU}U</strong>` : ''}
+                    </div>
+                    <div class="text-[10px] text-gray-400">时间: ${item.time} | IP: ${item.ip || '未知'}</div>
+                </div>
+            `).join('');
+        }
+
+        function quickFillUid(uid) {
+            document.getElementById('adminTargetUser').value = uid;
+            searchUserBalance();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function searchUserBalance() {
+            const uid = document.getElementById('adminTargetUser').value.trim();
+            if (!uid) { alert("请先输入 Telegram UID！"); return; }
+            let bal = cloudData.balances[uid] !== undefined ? cloudData.balances[uid] : 0.00;
+            document.getElementById('adminTargetBalance').value = bal;
+            alert(`查询成功：用户 [${uid}] 当前云端余额为 ${bal} USDT`);
+        }
+
+        async function pushCloud() {
+            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': API_KEY
+                },
+                body: JSON.stringify(cloudData)
+            });
+        }
+
+        async function approveDeposit(orderId, uid, amount) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
+            let cur = parseFloat(cloudData.balances[uid]) || 0;
+            cloudData.balances[uid] = cur + amount;
+            
+            await pushCloud();
+            alert(`已通过充值并为用户 [${uid}] 增加 ${amount} USDT！`);
+            loadAdminOrders();
+        }
+
+        async function approveExchange(orderId) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
+            await pushCloud();
+            alert("已同意该笔兑换订单！");
+            loadAdminOrders();
+        }
+
+        async function rejectExchange(orderId) {
+            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
+            await pushCloud();
+            alert("已触发风控拦截！");
+            loadAdminOrders();
+        }
+
+        async function removeOrder(orderId) {
+            cloudData.orders = cloudData.orders.filter(o => o.id !== orderId);
+            await pushCloud();
+            loadAdminOrders();
+        }
+
+        async function saveTargetUserBalance() {
+            const uid = document.getElementById('adminTargetUser').value.trim();
+            const bal = parseFloat(document.getElementById('adminTargetBalance').value);
+            if (!uid || isNaN(bal)) { alert("请输入正确的 UID 和数字金额！"); return; }
+
+            cloudData.balances[uid] = bal;
+            await pushCloud();
+            alert(`已成功将云端用户 [${uid}] 余额修改为 ${bal} USDT！`);
+        }
+    </script>
+</body>
+</html>
