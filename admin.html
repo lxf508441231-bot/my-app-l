@@ -36,7 +36,7 @@
                 </div>
             </div>
             <div id="adminDepositAuditList" class="space-y-2.5 max-h-80 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在实时监听全网订单...</div>
+                <div class="text-center py-6 text-xs text-gray-400">正在实时同步全网充值订单...</div>
             </div>
         </div>
     </div>
@@ -44,14 +44,14 @@
     <script>
         window.onload = function() {
             loadAdminAuditList();
-            // 每隔 3 秒自动轮询云端全网订单，实现全自动跨设备实时显示
+            // 每隔 3 秒自动轮询云端订单，实现跨设备全自动实时显示
             setInterval(loadAdminAuditList, 3000);
         };
 
         function loadAdminAuditList() {
             const container = document.getElementById('adminDepositAuditList');
             try {
-                let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
+                let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
                 let pending = orders.filter(o => o.status === 'pending');
 
                 document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
@@ -62,7 +62,7 @@
                 }
 
                 container.innerHTML = pending.map((item) => `
-                    <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border border-gray-200 shadow-sm animate-pulse">
+                    <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border border-gray-200 shadow-sm">
                         <div class="flex justify-between font-bold text-gray-700">
                             <span>UID: ${item.uid || '未知'}</span>
                             <span class="text-blue-600 font-bold text-sm">${item.amount} USDT</span>
@@ -80,7 +80,7 @@
         }
 
         function addTestOrder() {
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
+            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
             orders.unshift({
                 id: 'DEP' + Date.now().toString().slice(-6),
                 uid: 'user_demo_001',
@@ -88,33 +88,33 @@
                 status: 'pending',
                 time: new Date().toLocaleString()
             });
-            localStorage.setItem('global_network_orders', JSON.stringify(orders));
+            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
             loadAdminAuditList();
             alert("已成功模拟添加一条测试订单！");
         }
 
         function approveOrder(orderId, uid, amount) {
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
+            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
             orders = orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
-            localStorage.setItem('global_network_orders', JSON.stringify(orders));
+            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
 
-            // 更新云端该用户的专属余额映射表，触发用户端自动加钱
-            let balances = JSON.parse(localStorage.getItem('global_user_balances') || '{}');
-            let currentBal = parseFloat(balances[uid]) || parseFloat(localStorage.getItem('balance_' + uid)) || 0;
+            // 更新云端该用户的专属余额，前端会自动加钱
+            let cloudBalances = JSON.parse(localStorage.getItem('shared_cloud_balances') || '{}');
+            let currentBal = parseFloat(cloudBalances[uid]) || parseFloat(localStorage.getItem('balance_' + uid)) || 0;
             let newBal = currentBal + amount;
             
-            balances[uid] = newBal;
-            localStorage.setItem('global_user_balances', JSON.stringify(balances));
+            cloudBalances[uid] = newBal;
+            localStorage.setItem('shared_cloud_balances', JSON.stringify(cloudBalances));
             localStorage.setItem('balance_' + uid, newBal);
 
-            alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！用户端将秒级自动增加余额。`);
+            alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！用户端将在 3 秒内自动增加余额。`);
             loadAdminAuditList();
         }
 
         function rejectOrder(orderId) {
-            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
+            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
             orders = orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
-            localStorage.setItem('global_network_orders', JSON.stringify(orders));
+            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
             loadAdminAuditList();
             alert("已拒绝该笔充值申请");
         }
@@ -124,9 +124,9 @@
             const bal = parseFloat(document.getElementById('adminTargetBalance').value);
             if (!uid || isNaN(bal)) { alert("请输入正确的 UID 和余额数字！"); return; }
 
-            let balances = JSON.parse(localStorage.getItem('global_user_balances') || '{}');
-            balances[uid] = bal;
-            localStorage.setItem('global_user_balances', JSON.stringify(balances));
+            let cloudBalances = JSON.parse(localStorage.getItem('shared_cloud_balances') || '{}');
+            cloudBalances[uid] = bal;
+            localStorage.setItem('shared_cloud_balances', JSON.stringify(cloudBalances));
             localStorage.setItem('balance_' + uid, bal);
 
             alert(`已成功将用户 [${uid}] 余额修改为 ${bal.toFixed(2)} USDT！`);
