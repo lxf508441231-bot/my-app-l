@@ -14,36 +14,47 @@
                 <span class="text-xl">🛡️</span>
                 <span class="font-bold text-base text-gray-800">管理员独立控制台</span>
             </div>
-            <div class="flex gap-2">
-                <button type="button" onclick="openAllHistoryModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1.5 rounded-lg font-bold transition">
+            <div class="flex gap-2 items-center">
+                <button type="button" onclick="openAllHistoryModal()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-2 rounded-lg font-bold transition cursor-pointer">
                     📁 查看所有历史记录
                 </button>
                 <span class="text-xs text-red-600 bg-red-50 px-2.5 py-1 rounded-full font-bold">Secure Admin</span>
             </div>
         </div>
 
-        <!-- 1. 修改指定用户余额 (支持快速定位搜索) -->
+        <!-- 1. 修改指定用户余额 -->
         <div class="space-y-3">
             <label class="text-xs font-bold text-gray-700 block">1. 修改指定用户余额 (USDT)</label>
             <div class="flex gap-2">
                 <input type="text" id="adminTargetUser" class="flex-1 bg-gray-50 border rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-blue-500" placeholder="输入用户的 Telegram UID">
-                <button type="button" onclick="searchUserBalance()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-3 rounded-xl text-xs font-bold transition">查询余额</button>
+                <button type="button" onclick="searchUserBalance()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-3 rounded-xl text-xs font-bold transition cursor-pointer">查询余额</button>
             </div>
             <div class="flex gap-2">
                 <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额数字">
-                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition">确认修改</button>
+                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition cursor-pointer">确认修改</button>
             </div>
         </div>
 
-        <!-- 2. 全网充值与兑换订单审核 (附带按 UID/IP 搜索栏) -->
+        <!-- 2. 全网充值与兑换订单审核 -->
         <div class="space-y-3 pt-3 border-t">
             <div class="flex justify-between items-center">
                 <label class="text-xs font-bold text-gray-700">2. 全网用户充值与兑换订单审核 <span id="pendingCount" class="text-red-500 font-bold"></span></label>
                 <div class="flex gap-2">
-                    <button type="button" onclick="loadAdminOrders()" class="text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition">🔄 刷新列表</button>
+                    <button type="button" onclick="loadAdminOrders()" class="text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer">🔄 刷新列表</button>
                 </div>
             </div>
             
-            <!-- 搜索过滤输入框 -->
             <div>
-                <input type="text" id="searchKeyword" oninput="loadAdminOrders()" placeholder="🔍 输入 UID、
+                <input type="text" id="searchKeyword" oninput="loadAdminOrders()" placeholder="🔍 输入 UID、姓名或 IP 进行精准搜索过滤..." class="w-full bg-gray-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-500">
+            </div>
+
+            <div id="adminOrdersList" class="space-y-3 max-h-80 overflow-y-auto">
+                <div class="text-center py-6 text-xs text-gray-400">正在联网同步全网订单...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：所有历史充值与兑换记录面板 -->
+    <div id="historyModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 space-y-4 max-h-[90vh] flex flex-col">
+            <div
