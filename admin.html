@@ -1,154 +1,152 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>官方商城 - 管理员独立控制台</title>
-    <!-- Tailwind CSS CDN -->
+    <title>赚钱项目-官方兑换商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- LeanCloud SDK -->
-    <script src="//cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { tgBg: '#f4f6f9', tgCardBg: '#ffffff', tgText: '#1f2937' }
+                }
+            }
+        }
+    </script>
+    <style>.no-scrollbar::-webkit-scrollbar { display: none; }</style>
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen p-4 flex items-center justify-center font-sans">
-
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-lg p-5 space-y-6">
-        <div class="flex items-center justify-between border-b pb-4">
-            <div class="flex items-center space-x-2">
-                <span class="text-xl">🛡️</span>
-                <span class="font-bold text-base text-gray-800">管理员独立控制台</span>
-            </div>
-            <span class="text-xs text-red-600 bg-red-50 px-2.5 py-1 rounded-full font-bold">Secure Admin</span>
+<body class="bg-tgBg text-tgText min-h-screen pb-20 select-none font-sans">
+    <div class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl">💰</span>
+            <span class="font-bold text-base text-gray-800">赚钱项目-官方兑换商城</span>
         </div>
+        <span class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-medium">Mini App</span>
+    </div>
 
-        <!-- 1. 修改指定用户余额 -->
-        <div class="space-y-3">
-            <label class="text-xs font-bold text-gray-700 block">1. 修改指定用户余额 (USDT)</label>
-            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs focus:outline-none focus:border-blue-500 font-mono" placeholder="输入用户的 Telegram UID">
-            <div class="flex gap-2">
-                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额数字">
-                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition active:scale-95 shadow">确认修改</button>
+    <div class="max-w-md mx-auto p-4 space-y-4">
+        <div id="tab-shop" class="space-y-4">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs text-blue-100 font-medium">当前账户余额 (USDT)</span>
+                    <span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">TRC20</span>
+                </div>
+                <div class="flex items-baseline space-x-1 mb-4">
+                    <span class="text-3xl font-black" id="userBalanceDisplay">0.00</span>
+                    <span class="text-xs text-blue-200">USDT</span>
+                </div>
+                <div>
+                    <button type="button" id="btnDepositCard" class="w-full bg-white text-blue-600 font-bold py-3 rounded-xl text-xs shadow hover:bg-blue-50 transition flex items-center justify-center gap-1.5 active:scale-98">
+                        <i class="fa-solid fa-wallet text-sm"></i> 立即充值
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <!-- 2. 全网充值申请审核 -->
-        <div class="space-y-3 pt-3 border-t">
-            <div class="flex justify-between items-center">
-                <label class="text-xs font-bold text-gray-700">2. 全网用户充值申请审核</label>
-                <button onclick="loadGlobalAdminAuditList()" class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg font-medium hover:bg-blue-100 transition">
-                    <i class="fa-solid fa-rotate"></i> 刷新列表
+            <div id="exchangeCard" class="bg-tgCardBg p-5 rounded-2xl shadow-sm space-y-4">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="font-semibold text-gray-800 flex items-center gap-1.5"><i class="fa-solid fa-calculator text-blue-500"></i> 阶梯兑换计算器</span>
+                </div>
+                <div class="relative">
+                    <input type="number" id="inputAmount" placeholder="请输入兑换金额" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none focus:border-blue-500 transition" oninput="calculateRate()">
+                    <div class="absolute right-3 top-3.5 text-xs text-gray-400 font-semibold">USDT</div>
+                </div>
+                <div class="bg-blue-50/65 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-0.5">阶梯汇率结算</div>
+                        <div class="text-xs font-bold text-blue-600" id="currentRateDesc">单笔最低兑换 50 USDT</div>
+                    </div>
+                    <div class="text-right">
+                        <span id="resultAmount" class="text-2xl font-black text-blue-600">0.00</span>
+                        <span class="text-xs text-gray-500 ml-1">博彩U</span>
+                    </div>
+                </div>
+                <button id="exchangeBtn" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed" onclick="submitExchange()">
+                    <span>立即兑换</span>
                 </button>
             </div>
-            <div id="adminDepositAuditList" class="space-y-2.5 max-h-80 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在从云端加载申请记录...</div>
+        </div>
+
+        <div id="page-deposit" class="hidden space-y-4">
+            <button type="button" onclick="switchPage('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-lg border border-gray-200">
+                <i class="fa-solid fa-chevron-left"></i> 返回商城
+            </button>
+            <div class="bg-tgCardBg p-5 rounded-2xl shadow-sm text-center space-y-4">
+                <h3 class="font-bold text-lg text-gray-800">USDT 充值中心</h3>
+                <p class="text-xs text-gray-400">当前 USDT 支付区块链网络协议为 TRC20</p>
+                <div class="p-4 bg-gray-50 rounded-2xl border inline-block">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ" class="w-48 h-48 mx-auto rounded-lg shadow-sm">
+                </div>
+                <div class="bg-gray-50 p-3 rounded-xl border text-left">
+                    <div class="text-xs text-gray-400">TRC20 收款地址 (点击可复制)：</div>
+                    <div onclick="copyAddress('TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ')" class="text-xs font-mono font-bold text-gray-700 bg-white p-2.5 rounded-lg border mt-1 cursor-pointer">
+                        TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ
+                    </div>
+                </div>
+                <button type="button" onclick="submitDepositNotify()" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl shadow-md transition">
+                    我已充值
+                </button>
+                <div id="depositStatusBox" class="hidden text-left p-4 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800"></div>
             </div>
         </div>
     </div>
 
     <script>
-        AV.init({
-            appId: "9q6K9mU8x1J2L3Z4v5B6n7M8",
-            appKey: "testKeyForDemoOnly999",
-            serverURLs: "https://leancloud.cn"
-        });
+        let currentUserId = "user_demo_001";
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            currentUserId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+        } else {
+            let localId = localStorage.getItem('tma_local_uid');
+            if (!localId) { localId = 'UID_' + Math.random().toString(36).substring(2, 9); localStorage.setItem('tma_local_uid', localId); }
+            currentUserId = localId;
+        }
+
+        let userBalance = parseFloat(localStorage.getItem('balance_' + currentUserId)) || 0.00;
 
         window.onload = function() {
-            loadGlobalAdminAuditList();
+            if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
+            updateBalanceUI();
+            document.getElementById('btnDepositCard').onclick = (e) => { e.stopPropagation(); switchPage('deposit'); };
         };
 
-        async function saveTargetUserBalance() {
-            const targetUid = document.getElementById('adminTargetUser').value.trim();
-            const newBal = parseFloat(document.getElementById('adminTargetBalance').value);
-            if (!targetUid || isNaN(newBal)) {
-                alert("请输入完整的目标用户UID和新余额数字！");
-                return;
-            }
-
-            try {
-                const query = new AV.Query('UserWallet');
-                query.equalTo('tgUid', targetUid);
-                let record = await query.first();
-                if (!record) {
-                    const Wallet = AV.Object.extend('UserWallet');
-                    record = new Wallet();
-                    record.set('tgUid', targetUid);
-                }
-                record.set('balance', newBal);
-                await record.save();
-                alert(`成功将用户 [${targetUid}] 的余额修改为 ${newBal.toFixed(2)} USDT！`);
-            } catch (e) {
-                alert("云端更新失败：" + e.message);
-            }
+        function updateBalanceUI() {
+            document.getElementById('userBalanceDisplay').innerText = userBalance.toFixed(2);
+            localStorage.setItem('balance_' + currentUserId, userBalance);
         }
 
-        async function loadGlobalAdminAuditList() {
-            const container = document.getElementById('adminDepositAuditList');
-            container.innerHTML = `<div class="text-xs text-gray-400 py-4 text-center">正在从云端加载全网申请...</div>`;
-            try {
-                const query = new AV.Query('DepositOrder');
-                query.equalTo('status', 'pending');
-                query.descending('createdAt');
-                const results = await query.find();
-
-                if (results.length === 0) {
-                    container.innerHTML = `<div class="text-xs text-gray-400 py-6 text-center">当前没有待审核的充值申请</div>`;
-                    return;
-                }
-
-                container.innerHTML = results.map(item => `
-                    <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-2 border">
-                        <div class="flex justify-between font-bold text-gray-700">
-                            <span>用户UID: ${item.get('tgUid')}</span>
-                            <span class="text-blue-600">${item.get('amount')} USDT</span>
-                        </div>
-                        <div class="flex gap-2 pt-1">
-                            <button onclick="adminApprove('${item.id}', '${item.get('tgUid')}', ${item.get('amount')})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-xs font-bold transition">确认到账并加余额</button>
-                            <button onclick="adminReject('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition">拒绝/未到</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">加载失败</div>`;
-            }
+        function switchPage(page) {
+            document.getElementById('tab-shop').classList.add('hidden');
+            document.getElementById('page-deposit').classList.add('hidden');
+            if (page === 'deposit') document.getElementById('page-deposit').classList.remove('hidden');
+            else document.getElementById('tab-shop').classList.remove('hidden');
         }
 
-        async function adminApprove(orderId, targetUid, amount) {
-            try {
-                const order = AV.Object.createWithoutData('DepositOrder', orderId);
-                order.set('status', 'success');
-                await order.save();
+        function submitDepositNotify() {
+            const inputVal = prompt("请输入您本次充值的 USDT 金额：", "100");
+            if (!inputVal) return;
+            const amount = parseFloat(inputVal);
+            if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
 
-                const query = new AV.Query('UserWallet');
-                query.equalTo('tgUid', targetUid);
-                let record = await query.first();
-                let current = record ? (record.get('balance') || 0) : 0;
-                
-                if (!record) {
-                    const Wallet = AV.Object.extend('UserWallet');
-                    record = new Wallet();
-                    record.set('tgUid', targetUid);
-                }
-                record.set('balance', current + amount);
-                await record.save();
+            // 写入本地并同步至公共浏览器存储模拟全网
+            let orders = JSON.parse(localStorage.getItem('global_deposit_orders')) || [];
+            orders.unshift({
+                id: 'DEP' + Date.now().toString().slice(-6),
+                uid: currentUserId,
+                amount: amount,
+                status: 'pending',
+                time: new Date().toLocaleString()
+            });
+            localStorage.setItem('global_deposit_orders', JSON.stringify(orders));
 
-                alert(`已为用户 [${targetUid}] 成功入账 ${amount} USDT！`);
-                loadGlobalAdminAuditList();
-            } catch (e) {
-                alert("操作失败：" + e.message);
-            }
+            alert("已成功提交充值通知，请联系管理员审核！");
+            document.getElementById('depositStatusBox').classList.remove('hidden');
+            document.getElementById('depositStatusBox.innerHTML') = "充值申请已提交，正在等待审核...";
         }
 
-        async function adminReject(orderId) {
-            try {
-                const order = AV.Object.createWithoutData('DepositOrder', orderId);
-                order.set('status', 'failed');
-                await order.save();
-                alert("已标记拒绝");
-                loadGlobalAdminAuditList();
-            } catch (e) {
-                alert("操作失败：" + e.message);
-            }
+        function copyAddress(text) {
+            navigator.clipboard.writeText(text).then(() => alert("钱包地址已复制！"));
         }
     </script>
 </body>
