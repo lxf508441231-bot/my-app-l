@@ -60,12 +60,10 @@
                     <span class="text-3xl font-black" id="userBalanceDisplay">0.00</span>
                     <span class="text-xs text-blue-200">USDT</span>
                 </div>
-                <div class="flex gap-2">
-                    <button type="button" id="btnDepositCard" class="flex-1 bg-white text-blue-600 font-bold py-2.5 rounded-xl text-xs shadow hover:bg-blue-50 transition flex items-center justify-center gap-1 active:scale-95">
-                        <i class="fa-solid fa-wallet"></i> 立即充值
-                    </button>
-                    <button type="button" id="btnExchangeCard" class="flex-1 bg-white/20 text-white font-bold py-2.5 rounded-xl text-xs backdrop-blur-sm hover:bg-white/30 transition flex items-center justify-center gap-1 active:scale-95">
-                        <i class="fa-solid fa-arrow-right-arrow-left"></i> 立即兑换
+                <!-- 仅保留立即充值按钮，且放大撑满整行 -->
+                <div>
+                    <button type="button" id="btnDepositCard" class="w-full bg-white text-blue-600 font-bold py-3 rounded-xl text-xs shadow hover:bg-blue-50 transition flex items-center justify-center gap-1.5 active:scale-98">
+                        <i class="fa-solid fa-wallet text-sm"></i> 立即充值
                     </button>
                 </div>
             </div>
@@ -285,8 +283,14 @@
 
             await syncUserDataFromCloud();
 
-            document.getElementById('btnDepositCard').onclick = (e) => { e.stopPropagation(); switchPage('deposit'); };
-            document.getElementById('btnExchangeCard').onclick = (e) => { e.stopPropagation(); scrollToExchange(); };
+            // 绑定充值按钮点击跳转事件
+            const btnDeposit = document.getElementById('btnDepositCard');
+            if(btnDeposit) {
+                btnDeposit.onclick = function(e) {
+                    e.stopPropagation();
+                    switchPage('deposit');
+                };
+            }
 
             startDepositTimer(1799);
         };
@@ -358,11 +362,6 @@
             } else if (page === 'orders') {
                 switchTab('orders');
             }
-        }
-
-        function scrollToExchange() {
-            switchTab('shop');
-            document.getElementById('exchangeCard').scrollIntoView({ behavior: 'smooth' });
         }
 
         function setAmount(val) {
