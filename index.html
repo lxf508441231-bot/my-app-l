@@ -19,6 +19,8 @@
     <style>.no-scrollbar::-webkit-scrollbar { display: none; }</style>
 </head>
 <body class="bg-tgBg text-tgText min-h-screen pb-20 select-none font-sans">
+
+    <!-- 顶部导航栏 -->
     <div class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-4 py-3 flex items-center justify-between">
         <div class="flex items-center space-x-2">
             <span class="text-xl">💰</span>
@@ -27,9 +29,15 @@
         <span class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-medium">Mini App</span>
     </div>
 
+    <!-- 主体内容区（限制最大宽度并居中，还原手机端精美排版） -->
     <div class="max-w-md mx-auto p-4 space-y-4">
+        
+        <!-- 兑换商城页面 -->
         <div id="tab-shop" class="space-y-4">
+            
+            <!-- 用户余额卡片 -->
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs text-blue-100 font-medium">当前账户余额 (USDT)</span>
                     <span class="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full">TRC20</span>
@@ -45,9 +53,12 @@
                 </div>
             </div>
 
+            <!-- 兑换计算器卡片 -->
             <div id="exchangeCard" class="bg-tgCardBg p-5 rounded-2xl shadow-sm space-y-4">
                 <div class="flex justify-between items-center text-sm">
-                    <span class="font-semibold text-gray-800 flex items-center gap-1.5"><i class="fa-solid fa-calculator text-blue-500"></i> 阶梯兑换计算器</span>
+                    <span class="font-semibold text-gray-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calculator text-blue-500"></i> 阶梯兑换计算器
+                    </span>
                 </div>
                 <div class="relative">
                     <input type="number" id="inputAmount" placeholder="请输入兑换金额" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none focus:border-blue-500 transition" oninput="calculateRate()">
@@ -69,6 +80,7 @@
             </div>
         </div>
 
+        <!-- 充值页面 -->
         <div id="page-deposit" class="hidden space-y-4">
             <button type="button" onclick="switchPage('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-lg border border-gray-200">
                 <i class="fa-solid fa-chevron-left"></i> 返回商城
@@ -91,6 +103,7 @@
                 <div id="depositStatusBox" class="hidden text-left p-4 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800"></div>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -129,7 +142,6 @@
             const amount = parseFloat(inputVal);
             if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
 
-            // 写入本地并同步至公共浏览器存储模拟全网
             let orders = JSON.parse(localStorage.getItem('global_deposit_orders')) || [];
             orders.unshift({
                 id: 'DEP' + Date.now().toString().slice(-6),
@@ -141,8 +153,9 @@
             localStorage.setItem('global_deposit_orders', JSON.stringify(orders));
 
             alert("已成功提交充值通知，请联系管理员审核！");
-            document.getElementById('depositStatusBox').classList.remove('hidden');
-            document.getElementById('depositStatusBox.innerHTML') = "充值申请已提交，正在等待审核...";
+            const box = document.getElementById('depositStatusBox');
+            box.classList.remove('hidden');
+            box.innerHTML = "充值申请已提交，正在等待管理员审核...";
         }
 
         function copyAddress(text) {
