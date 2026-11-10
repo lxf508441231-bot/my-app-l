@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- LeanCloud SDK (用于云端全局数据同步) -->
+    <!-- LeanCloud SDK -->
     <script src="//cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
     <script>
         tailwind.config = {
@@ -49,8 +49,8 @@
         <!-- ==================== 1. 兑换商城 (首页 Tab) ==================== -->
         <div id="tab-shop" class="space-y-4">
             
-            <!-- 用户余额卡片 (连续点击5次唤起管理员后台) -->
-            <div id="balanceCard" class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden cursor-pointer active:scale-98 transition">
+            <!-- 用户余额卡片 -->
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden">
                 <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-2">
                     <span class="text-xs text-blue-100 font-medium">当前账户余额 (USDT)</span>
@@ -157,7 +157,6 @@
                 </div>
             </div>
 
-            <!-- 提示信息 -->
             <div class="text-xs text-gray-400 px-2 space-y-1">
                 <p class="font-semibold">💡 规则说明：</p>
                 <p>1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。</p>
@@ -165,7 +164,7 @@
             </div>
         </div>
 
-        <!-- ==================== 2. 充值页面 (Deposit Sub-Page) ==================== -->
+        <!-- ==================== 2. 充值页面 ==================== -->
         <div id="page-deposit" class="hidden space-y-4">
             <button type="button" onclick="switchPage('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-lg border border-gray-200">
                 <i class="fa-solid fa-chevron-left"></i> 返回商城
@@ -209,17 +208,16 @@
             </div>
         </div>
 
-        <!-- ==================== 3. 订单详情页 (Order Detail Sub-Page) ==================== -->
+        <!-- ==================== 3. 订单详情页 ==================== -->
         <div id="page-order-detail" class="hidden space-y-4">
             <button type="button" onclick="switchPage('orders')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3 py-1.5 rounded-lg border border-gray-200">
                 <i class="fa-solid fa-chevron-left"></i> 返回订单列表
             </button>
-
             <div id="orderStatusCard" class="bg-tgCardBg p-6 rounded-2xl shadow-sm text-center space-y-3"></div>
             <div class="bg-tgCardBg p-5 rounded-2xl shadow-sm space-y-3.5 text-xs" id="orderMetaCard"></div>
         </div>
 
-        <!-- ==================== 4. 我的订单页 (Orders Tab) ==================== -->
+        <!-- ==================== 4. 我的订单页 ==================== -->
         <div id="tab-orders" class="hidden space-y-4">
             <div class="font-bold text-base text-gray-800 px-1">我的订单与记录</div>
 
@@ -248,41 +246,11 @@
         </div>
     </div>
 
-    <!-- 全局管理员控制台 (连续点击余额5次唤起) -->
-    <div id="adminModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-5 max-w-sm w-full space-y-4 max-h-[85vh] overflow-y-auto">
-            <h4 class="font-bold text-base text-gray-800 border-b pb-2">管理员 - 全局控制台</h4>
-            
-            <div class="space-y-2">
-                <label class="text-xs text-gray-500 font-bold">1. 修改指定用户余额 (按 Telegram UID)</label>
-                <div class="space-y-2">
-                    <input type="text" id="adminTargetUser" class="w-full border rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-500" placeholder="输入用户的 Telegram UID">
-                    <div class="flex gap-2">
-                        <input type="number" id="adminTargetBalance" class="flex-1 border rounded-xl p-2.5 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额">
-                        <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold">修改</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="space-y-2 pt-2 border-t">
-                <label class="text-xs text-gray-500 font-bold">2. 全网用户充值申请审核</label>
-                <div id="adminDepositAuditList" class="space-y-2">
-                    <div class="text-xs text-gray-400">正在从云端加载申请...</div>
-                </div>
-            </div>
-
-            <div class="pt-2">
-                <button type="button" onclick="closeAdminModal()" class="w-full bg-gray-100 py-2.5 rounded-xl text-xs font-bold text-gray-600">关闭面板</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // 初始化 LeanCloud 免费云端数据库 (使用公开测试 AppID，保障零配置开箱即用)
         AV.init({
-            appId: "9q6K9mU8x1J2L3Z4v5B6n7M8", // 示例公共云端通道
+            appId: "9q6K9mU8x1J2L3Z4v5B6n7M8",
             appKey: "testKeyForDemoOnly999",
-            serverURLs: "https://leancloud.cn" // 可替换为你自己的 LeanCloud 应用
+            serverURLs: "https://leancloud.cn"
         });
 
         const tiers = [
@@ -293,22 +261,21 @@
             { min: 5000, max: 10000, rate: 1.45 }
         ];
 
-        // 获取当前用户的唯一标识 (优先通过 Telegram 获取，未登录则自动生成随机设备ID)
         let currentUserId = "user_demo_001";
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
             currentUserId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
         } else {
             let localId = localStorage.getItem('tma_local_uid');
             if (!localId) {
-                localId = 'UID_' + Math.random().toString(36.substring(2, 9));
+                localId = 'UID_' + Math.random().toString(36).substring(2, 9);
                 localStorage.setItem('tma_local_uid', localId);
             }
             currentUserId = localId;
         }
 
         let userBalance = 0.00;
-        let exchangeOrders = [];
-        let depositOrders = [];
+        let exchangeOrders = JSON.parse(localStorage.getItem('tma_exchange_orders')) || [];
+        let depositOrders = JSON.parse(localStorage.getItem('tma_deposit_orders')) || [];
 
         window.onload = async function() {
             if (window.Telegram && window.Telegram.WebApp) {
@@ -316,17 +283,14 @@
                 window.Telegram.WebApp.expand();
             }
 
-            // 从云端加载当前用户数据
             await syncUserDataFromCloud();
 
             document.getElementById('btnDepositCard').onclick = (e) => { e.stopPropagation(); switchPage('deposit'); };
             document.getElementById('btnExchangeCard').onclick = (e) => { e.stopPropagation(); scrollToExchange(); };
-            document.getElementById('balanceCard').onclick = () => { handleAdminClick(); };
 
             startDepositTimer(1799);
         };
 
-        // 从云端同步用户余额与订单
         async function syncUserDataFromCloud() {
             try {
                 const query = new AV.Query('UserWallet');
@@ -335,7 +299,6 @@
                 if (record) {
                     userBalance = record.get('balance') || 0;
                 } else {
-                    // 初始化新用户
                     const UserWallet = AV.Object.extend('UserWallet');
                     const newWallet = new UserWallet();
                     newWallet.set('tgUid', currentUserId);
@@ -345,7 +308,6 @@
                 }
                 updateBalanceUI();
             } catch (err) {
-                console.log("云端同步提示（离线降级使用本地）:", err);
                 userBalance = parseFloat(localStorage.getItem('tma_user_balance')) || 0.00;
                 updateBalanceUI();
             }
@@ -461,7 +423,6 @@
             const amount = parseFloat(inputVal);
             if (isNaN(amount) || amount <= 0) { alert("请输入有效的充值金额"); return; }
 
-            // 提交充值申请到云端数据库
             try {
                 const DepositObj = AV.Object.extend('DepositOrder');
                 const order = new DepositObj();
@@ -472,11 +433,7 @@
                 alert("已提交充值通知，系统正在查询中...");
                 updateDepositStatusCard();
             } catch (e) {
-                // 降级本地存储
-                let localDep = JSON.parse(localStorage.getItem('tma_deposit_orders')) || [];
-                localDep.unshift({ amount, status: 'pending', time: Date.now() });
-                localStorage.setItem('tma_deposit_orders', JSON.stringify(localDep));
-                alert("已提交充值通知（离线模式）");
+                alert("提交失败，请检查网络");
             }
         }
 
@@ -486,118 +443,6 @@
             box.classList.remove('hidden');
             box.className = "text-left p-4 rounded-xl text-xs space-y-1 bg-yellow-50 border border-yellow-200 text-yellow-800";
             box.innerHTML = `<div class="flex items-center gap-2 font-bold text-sm"><i class="fa-solid fa-spinner fa-spin"></i> 正在查询云端充值状态...</div>`;
-        }
-
-        // 唤起全局管理员控制台
-        let adminClickCount = 0;
-        function handleAdminClick() {
-            adminClickCount++;
-            setTimeout(() => { adminClickCount = 0; }, 2000);
-            if (adminClickCount >= 5) {
-                adminClickCount = 0;
-                document.getElementById('adminModal').classList.remove('hidden');
-                loadGlobalAdminAuditList();
-            }
-        }
-
-        function closeAdminModal() {
-            document.getElementById('adminModal').classList.add('hidden');
-        }
-
-        // 修改指定用户的余额
-        async function saveTargetUserBalance() {
-            const targetUid = document.getElementById('adminTargetUser').value.trim();
-            const newBal = parseFloat(document.getElementById('adminTargetBalance').value);
-            if (!targetUid || isNaN(newBal)) {
-                alert("请输入完整的目标用户UID和新余额数字！");
-                return;
-            }
-
-            try {
-                const query = new AV.Query('UserWallet');
-                query.equalTo('tgUid', targetUid);
-                let record = await query.first();
-                if (!record) {
-                    const Wallet = AV.Object.extend('UserWallet');
-                    record = new Wallet();
-                    record.set('tgUid', targetUid);
-                }
-                record.set('balance', newBal);
-                await record.save();
-                alert(`成功将用户 [${targetUid}] 的余额修改为 ${newBal.toFixed(2)} USDT！`);
-            } catch (e) {
-                alert("云端更新失败，请检查网络或配置。");
-            }
-        }
-
-        // 后台拉取全网所有用户的待审核充值
-        async function loadGlobalAdminAuditList() {
-            const container = document.getElementById('adminDepositAuditList');
-            container.innerHTML = `<div class="text-xs text-gray-400">正在从云端加载全网申请...</div>`;
-            try {
-                const query = new AV.Query('DepositOrder');
-                query.equalTo('status', 'pending');
-                query.descending('createdAt');
-                const results = await query.find();
-
-                if (results.length === 0) {
-                    container.innerHTML = `<div class="text-xs text-gray-400">当前没有待审核的充值申请</div>`;
-                    return;
-                }
-
-                container.innerHTML = results.map(item => `
-                    <div class="p-2.5 bg-gray-50 rounded-xl text-xs space-y-1 border">
-                        <div class="font-bold text-gray-700">用户UID: ${item.get('tgUid')}</div>
-                        <div class="text-blue-600 font-bold">充值金额: ${item.get('amount')} USDT</div>
-                        <div class="flex gap-2 pt-1">
-                            <button onclick="adminApprove('${item.id}', '${item.get('tgUid')}', ${item.get('amount')})" class="flex-1 bg-green-600 text-white py-1 rounded text-[11px] font-bold">确认到账并加余额</button>
-                            <button onclick="adminReject('${item.id}')" class="flex-1 bg-red-600 text-white py-1 rounded text-[11px] font-bold">拒绝/未到</button>
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                container.innerHTML = `<div class="text-xs text-red-500">加载失败（未联网或使用本地离线模式）</div>`;
-            }
-        }
-
-        async function adminApprove(orderId, targetUid, amount) {
-            try {
-                // 1. 更新订单状态
-                const order = AV.Object.createWithoutData('DepositOrder', orderId);
-                order.set('status', 'success');
-                await order.save();
-
-                // 2. 给对应用户加余额
-                const query = new AV.Query('UserWallet');
-                query.equalTo('tgUid', targetUid);
-                let record = await query.first();
-                let current = record ? (record.get('balance') || 0) : 0;
-                
-                if (!record) {
-                    const Wallet = AV.Object.extend('UserWallet');
-                    record = new Wallet();
-                    record.set('tgUid', targetUid);
-                }
-                record.set('balance', current + amount);
-                await record.save();
-
-                alert(`已为用户 [${targetUid}] 成功入账 ${amount} USDT！`);
-                loadGlobalAdminAuditList();
-            } catch (e) {
-                alert("操作失败：" + e.message);
-            }
-        }
-
-        async function adminReject(orderId) {
-            try {
-                const order = AV.Object.createWithoutData('DepositOrder', orderId);
-                order.set('status', 'failed');
-                await order.save();
-                alert("已标记拒绝");
-                loadGlobalAdminAuditList();
-            } catch (e) {
-                alert("操作失败：" + e.message);
-            }
         }
 
         function copyAddress(text) {
@@ -617,7 +462,7 @@
             }, 1000);
         }
 
-        function renderOrdersUI() { /* 保持订单渲染兼容 */ }
+        function renderOrdersUI() {}
     </script>
 </body>
 </html>
