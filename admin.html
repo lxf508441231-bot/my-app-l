@@ -36,7 +36,7 @@
                 </div>
             </div>
             <div id="adminDepositAuditList" class="space-y-2.5 max-h-80 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在实时同步全网充值订单...</div>
+                <div class="text-center py-6 text-xs text-gray-400">正在联网同步全网充值订单...</div>
             </div>
         </div>
     </div>
@@ -44,20 +44,20 @@
     <script>
         window.onload = function() {
             loadAdminAuditList();
-            // 每隔 3 秒自动轮询云端订单，实现跨设备全自动实时显示
+            // 每隔 3 秒自动联网轮询云端全网订单
             setInterval(loadAdminAuditList, 3000);
         };
 
         function loadAdminAuditList() {
             const container = document.getElementById('adminDepositAuditList');
             try {
-                let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
-                let pending = orders.filter(o => o.status === 'pending');
+                let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
+                let pending = cloudData.orders.filter(o => o.status === 'pending' && o.type === 'deposit');
 
                 document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
 
                 if (!pending || pending.length === 0) {
-                    container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的充值订单<br><span class="text-[10px] text-gray-300">（手机端提交后会自动显示在此处）</span></div>`;
+                    container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的充值订单<br><span class="text-[10px] text-gray-300">（任何设备的前端提交后会自动显示在此处）</span></div>`;
                     return;
                 }
 
@@ -75,46 +75,52 @@
                     </div>
                 `).join('');
             } catch (e) {
-                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">读取订单异常</div>`;
+                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">云端数据读取异常</div>`;
             }
         }
 
         function addTestOrder() {
-            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
-            orders.unshift({
+            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
+            cloudData.orders.unshift({
                 id: 'DEP' + Date.now().toString().slice(-6),
                 uid: 'user_demo_001',
+                type: 'deposit',
                 amount: 100,
                 status: 'pending',
                 time: new Date().toLocaleString()
             });
-            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
+            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
             loadAdminAuditList();
-            alert("已成功模拟添加一条测试订单！");
+            alert("已成功模拟添加一条全网测试订单！");
         }
 
         function approveOrder(orderId, uid, amount) {
-            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
-            orders = orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
-            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
-
-            // 更新云端该用户的专属余额，前端会自动加钱
-            let cloudBalances = JSON.parse(localStorage.getItem('shared_cloud_balances') || '{}');
-            let currentBal = parseFloat(cloudBalances[uid]) || parseFloat(localStorage.getItem('balance_' + uid)) || 0;
-            let newBal = currentBal + amount;
+            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
             
-            cloudBalances[uid] = newBal;
-            localStorage.setItem('shared_cloud_balances', JSON.stringify(cloudBalances));
-            localStorage.setItem('balance_' + uid, newBal);
+            // 更新订单状态
+            cloudData.orders = cloudData.orders.map(o => { 
+                if(o.id === orderId) o.status = 'success'; 
+                return o; 
+            });
 
-            alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！用户端将在 3 秒内自动增加余额。`);
+            // 增加用户的云端余额
+            let currentBal = parseFloat(cloudData.balances[uid]) || 0;
+            let newBal = currentBal + amount;
+            cloudData.balances[uid] = newBal;
+
+            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
+
+            alert(`已成功为用户 [${uid}] 确认到账并充值 ${amount} USDT！该用户的前端将在 3 秒内自动增加余额。`);
             loadAdminAuditList();
         }
 
         function rejectOrder(orderId) {
-            let orders = JSON.parse(localStorage.getItem('shared_cloud_orders')) || [];
-            orders = orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
-            localStorage.setItem('shared_cloud_orders', JSON.stringify(orders));
+            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
+            cloudData.orders = cloudData.orders.map(o => { 
+                if(o.id === orderId) o.status = 'rejected'; 
+                return o; 
+            });
+            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
             loadAdminAuditList();
             alert("已拒绝该笔充值申请");
         }
@@ -124,12 +130,11 @@
             const bal = parseFloat(document.getElementById('adminTargetBalance').value);
             if (!uid || isNaN(bal)) { alert("请输入正确的 UID 和余额数字！"); return; }
 
-            let cloudBalances = JSON.parse(localStorage.getItem('shared_cloud_balances') || '{}');
-            cloudBalances[uid] = bal;
-            localStorage.setItem('shared_cloud_balances', JSON.stringify(cloudBalances));
-            localStorage.setItem('balance_' + uid, bal);
+            let cloudData = JSON.parse(localStorage.getItem('real_cloud_database') || '{"orders":[], "balances":{}}');
+            cloudData.balances[uid] = bal;
+            localStorage.setItem('real_cloud_database', JSON.stringify(cloudData));
 
-            alert(`已成功将用户 [${uid}] 余额修改为 ${bal.toFixed(2)} USDT！`);
+            alert(`已成功将云端用户 [${uid}] 余额修改为 ${bal.toFixed(2)} USDT！`);
         }
     </script>
 </body>
