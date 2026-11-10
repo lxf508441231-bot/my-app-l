@@ -45,7 +45,7 @@
             </div>
             
             <div>
-                <input type="text" id="searchKeyword" oninput="loadAdminOrders()" placeholder="🔍 输入 UID、姓名或 IP 进行精准搜索过滤..." class="w-full bg-gray-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-500">
+                <input type="text" id="searchKeyword" oninput="loadAdminOrders()" placeholder="🔍 输入 UID、姓名、IP 或订单号搜索..." class="w-full bg-gray-50 border rounded-xl p-2.5 text-xs focus:outline-none focus:border-blue-500">
             </div>
 
             <div id="adminOrdersList" class="space-y-3 max-h-80 overflow-y-auto">
@@ -103,7 +103,8 @@
                         pending = pending.filter(o => 
                             String(o.uid).toLowerCase().includes(keyword) || 
                             String(o.ip).toLowerCase().includes(keyword) ||
-                            String(o.name).toLowerCase().includes(keyword)
+                            String(o.name).toLowerCase().includes(keyword) ||
+                            String(o.id).toLowerCase().includes(keyword)
                         );
                     }
 
@@ -117,8 +118,13 @@
                     container.innerHTML = pending.map((item) => `
                         <div class="p-3.5 bg-gray-50 rounded-xl text-xs space-y-2.5 border shadow-sm">
                             <div class="flex justify-between font-bold text-gray-700">
-                                <span>类型: ${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
+                                <span>类型: ${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'}</span>
                                 <span class="text-blue-600 font-bold text-sm">${item.amount} USDT</span>
+                            </div>
+                            
+                            <!-- 订单编号长格式展示 -->
+                            <div class="bg-blue-50/50 p-2 rounded border border-blue-100 font-mono text-[11px] text-blue-700">
+                                订单编号: <strong class="select-all">${item.id}</strong>
                             </div>
 
                             <div class="bg-white p-2.5 rounded-lg border border-gray-100 space-y-1 text-[11px] font-mono text-gray-600">
@@ -151,7 +157,6 @@
             }
         }
 
-        // 打开历史记录弹窗
         function openAllHistoryModal() {
             const modal = document.getElementById('historyModal');
             if (modal) {
@@ -160,7 +165,6 @@
             }
         }
 
-        // 关闭历史记录弹窗
         function closeAllHistoryModal() {
             const modal = document.getElementById('historyModal');
             if (modal) {
@@ -168,7 +172,6 @@
             }
         }
 
-        // 渲染历史记录列表
         function renderHistoryList() {
             const content = document.getElementById('historyModalContent');
             const searchInput = document.getElementById('historySearchInput');
@@ -193,13 +196,16 @@
             content.innerHTML = orders.map(item => `
                 <div class="p-3 bg-gray-50 rounded-xl text-xs space-y-1.5 border">
                     <div class="flex justify-between font-bold">
-                        <span>${item.type === 'deposit' ? '📥 充值' : '🔄 兑换'} (${item.id})</span>
+                        <span>${item.type === 'deposit' ? '📥 充值' : '🔄 兑换'}</span>
                         <span class="${item.status === 'success' ? 'text-green-600' : item.status === 'pending' ? 'text-yellow-600' : 'text-red-600'}">
                             ${item.status === 'success' ? '已完成' : item.status === 'pending' ? '审核/兑换中' : '已风控拦截'}
                         </span>
                     </div>
+                    <div class="font-mono text-[11px] text-blue-600 bg-white p-1.5 rounded border select-all">
+                        编号: ${item.id}
+                    </div>
                     <div class="text-gray-500 font-mono text-[11px]">
-                        UID: <strong class="text-blue-600 select-all">${item.uid}</strong> | 金额: <strong class="text-gray-800">${item.amount} USDT</strong>
+                        UID: <strong class="text-gray-800 select-all">${item.uid}</strong> | 金额: <strong class="text-gray-800">${item.amount} USDT</strong>
                         ${item.type === 'exchange' ? ` | 获得: <strong class="text-indigo-600">${item.getU}U</strong>` : ''}
                     </div>
                     <div class="text-[10px] text-gray-400">时间: ${item.time} | IP: ${item.ip || '未知'}</div>
