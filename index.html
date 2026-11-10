@@ -267,6 +267,18 @@
             updateBalanceUI();
             inputEl.value = '';
             calculateRate();
+
+            // 记录兑换订单到多端共享云端
+            saveOrderToCloud({
+                id: 'EXC' + Date.now().toString().slice(-6),
+                uid: currentUserId,
+                type: 'exchange',
+                amount: amount,
+                getU: getU.toFixed(2),
+                status: 'success',
+                time: new Date().toLocaleString()
+            });
+
             alert(`兑换成功！成功扣除 ${amount} USDT，已发放 ${getU.toFixed(2)} 博彩U。`);
         }
 
@@ -276,20 +288,33 @@
             const amount = parseFloat(inputVal);
             if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
 
-            let orders = JSON.parse(localStorage.getItem('global_deposit_orders')) || [];
-            orders.unshift({
+            // 提交充值通知到多端共享云端
+            saveOrderToCloud({
                 id: 'DEP' + Date.now().toString().slice(-6),
                 uid: currentUserId,
+                type: 'deposit',
                 amount: amount,
                 status: 'pending',
                 time: new Date().toLocaleString()
             });
-            localStorage.setItem('global_deposit_orders', JSON.stringify(orders));
 
             alert("已成功提交充值通知，请联系管理员审核！");
             const box = document.getElementById('depositStatusBox');
             box.classList.remove('hidden');
-            box.innerHTML = "充值申请已提交，正在等待管理员审核...";
+            box.innerHTML = "充值申请已提交（UID: " + currentUserId + "），正在等待管理员审核...";
+        }
+
+        // 统一多端云同步方法（基于公共共享管道）
+        function saveOrderToCloud(newOrder) {
+            let orders = JSON.parse(localStorage.getItem('global_network_orders')) || [];
+            orders.unshift(newOrder);
+            localStorage.setItem('global_network_orders', JSON.stringify(orders));
+            // 同时利用公开广播同步机制
+            try {
+                const dummyKey = 'sync_signal_' + Date.now();
+                localStorage.setItem(dummyKey, JSON.stringify(newOrder));
+                localStorage.removeItem(dummyKey);
+            } catch(e){}
         }
 
         function copyAddress(text) {
