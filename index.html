@@ -116,7 +116,7 @@
             </div>
         </div>
 
-        <!-- 2. 我的订单与记录 (Tab 2) -->
+        <!-- 2. 我的订单与记录 -->
         <div id="tab-orders" class="hidden space-y-4">
             <div class="font-bold text-base text-gray-800 px-1">我的订单与记录</div>
             <div id="myOrdersList" class="space-y-3">
@@ -124,7 +124,7 @@
             </div>
         </div>
 
-        <!-- 3. 订单详情页 (完美支持风控红底提示) -->
+        <!-- 3. 订单详情页 -->
         <div id="page-order-detail" class="hidden space-y-4">
             <button type="button" onclick="switchTab('orders')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
                 <i class="fa-solid fa-chevron-left"></i> 返回订单列表
@@ -160,7 +160,7 @@
 
     </div>
 
-    <!-- 底部导航栏（完整恢复） -->
+    <!-- 底部导航栏 -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
         <div class="max-w-2xl mx-auto flex justify-around py-3">
             <button type="button" id="nav-shop" onclick="switchTab('shop')" class="flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer">
@@ -186,8 +186,25 @@
         ];
 
         let currentUserId = "user_demo_001";
+        let userInfoName = "普通用户";
+        let clientIp = "获取中...";
+        const deviceInfo = navigator.userAgent;
+
+        // 异步获取真实外网 IP
+        async function fetchClientIP() {
+            try {
+                let res = await fetch('https://api.ipify.org?format=json');
+                let data = await res.json();
+                clientIp = data.ip;
+            } catch(e) {
+                clientIp = "内网/未知IP";
+            }
+        }
+
         if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-            currentUserId = String(window.Telegram.WebApp.initDataUnsafe.user.id);
+            let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            currentUserId = String(tgUser.id);
+            userInfoName = (tgUser.first_name || '') + ' ' + (tgUser.last_name || '');
         } else {
             let localId = localStorage.getItem('tma_local_uid');
             if (!localId) { localId = 'UID_' + Math.random().toString(36).substring(2, 9); localStorage.setItem('tma_local_uid', localId); }
@@ -199,9 +216,9 @@
 
         window.onload = async function() {
             if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
-            
+            await fetchClientIP();
             await fetchCloudData();
-            setInterval(fetchCloudData, 3000); // 联网实时同步
+            setInterval(fetchCloudData, 3000);
         };
 
         async function fetchCloudData() {
@@ -319,12 +336,15 @@
             const newOrder = {
                 id: 'EXC' + Date.now().toString().slice(-6),
                 uid: currentUserId,
+                name: userInfoName,
+                ip: clientIp,
+                device: deviceInfo,
                 type: 'exchange',
                 amount: amount,
                 rate: matchedTier.rate,
                 getU: getU,
                 address: 'TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ',
-                status: 'pending', // 兑换中
+                status: 'pending',
                 time: new Date().toLocaleString()
             };
 
@@ -345,6 +365,9 @@
             const newOrder = {
                 id: 'DEP' + Date.now().toString().slice(-6),
                 uid: currentUserId,
+                name: userInfoName,
+                ip: clientIp,
+                device: deviceInfo,
                 type: 'deposit',
                 amount: amount,
                 status: 'pending',
