@@ -21,12 +21,18 @@
 <body class="bg-tgBg text-tgText min-h-screen pb-24 select-none font-sans">
 
     <!-- 顶部导航栏 -->
-    <div class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-6 py-3.5 flex items-center justify-between">
+    <div class="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <div class="flex items-center space-x-2">
             <span class="text-xl">💰</span>
-            <span class="font-bold text-base text-gray-800">赚钱项目-官方兑换商城</span>
+            <span class="font-bold text-sm sm:text-base text-gray-800" data-i18n="shopTitle">赚钱项目-官方兑换商城</span>
         </div>
-        <span class="text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium" id="userUidBadge">Mini App</span>
+        <div class="flex items-center gap-2">
+            <!-- 语言切换按钮 -->
+            <button type="button" onclick="toggleLanguage()" id="langBtn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full font-bold transition cursor-pointer">
+                🌐 EN
+            </button>
+            <span class="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-medium" id="userUidBadge">Mini App</span>
+        </div>
     </div>
 
     <!-- 主体内容区 -->
@@ -37,7 +43,7 @@
             <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs text-blue-100 font-medium">当前账户余额 (USDT)</span>
+                    <span class="text-xs text-blue-100 font-medium" data-i18n="currentBalance">当前账户余额 (USDT)</span>
                     <span class="text-[10px] bg-white/20 text-white px-2.5 py-0.5 rounded-full font-medium">TRC20</span>
                 </div>
                 <div class="flex items-baseline space-x-1.5 mb-6">
@@ -46,7 +52,7 @@
                 </div>
                 <div>
                     <button type="button" onclick="switchTab('deposit')" class="w-full bg-white text-blue-600 font-bold py-3.5 rounded-xl text-sm shadow hover:bg-blue-50 transition flex items-center justify-center gap-2 active:scale-98 cursor-pointer">
-                        <i class="fa-solid fa-wallet"></i> 立即充值
+                        <i class="fa-solid fa-wallet"></i> <span data-i18n="depositBtn">立即充值</span>
                     </button>
                 </div>
             </div>
@@ -55,11 +61,11 @@
             <div id="exchangeCard" class="bg-tgCardBg p-6 rounded-2xl shadow-sm space-y-5">
                 <div class="flex justify-between items-center text-sm">
                     <span class="font-bold text-gray-800 flex items-center gap-2 text-base">
-                        <i class="fa-solid fa-calculator text-blue-500"></i> 阶梯兑换计算器
+                        <i class="fa-solid fa-calculator text-blue-500"></i> <span data-i18n="calcTitle">阶梯兑换计算器</span>
                     </span>
                 </div>
                 <div class="relative">
-                    <input type="number" id="inputAmount" placeholder="请输入兑换金额" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-lg font-bold focus:outline-none focus:border-blue-500 transition" oninput="calculateRate()">
+                    <input type="number" id="inputAmount" data-i18n-placeholder="calcPlaceholder" placeholder="请输入兑换金额" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-lg font-bold focus:outline-none focus:border-blue-500 transition" oninput="calculateRate()">
                     <div class="absolute right-4 top-4 text-xs text-gray-400 font-semibold">USDT</div>
                 </div>
 
@@ -75,29 +81,29 @@
 
                 <div class="bg-blue-50/65 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
                     <div>
-                        <div class="text-xs text-gray-500 mb-0.5">阶梯汇率结算</div>
-                        <div class="text-xs font-bold text-blue-600" id="currentRateDesc">单笔最低兑换 50 USDT</div>
+                        <div class="text-xs text-gray-500 mb-0.5" data-i18n="rateSettlement">阶梯汇率结算</div>
+                        <div class="text-xs font-bold text-blue-600" id="currentRateDesc" data-i18n="minExchangeDesc">单笔最低兑换 50 USDT</div>
                     </div>
                     <div class="text-right">
                         <span id="resultAmount" class="text-3xl font-black text-blue-600">0.00</span>
-                        <span class="text-xs text-gray-500 ml-1">博彩U</span>
+                        <span class="text-xs text-gray-500 ml-1" data-i18n="targetUnit">博彩U</span>
                     </div>
                 </div>
                 <button id="exchangeBtn" disabled class="w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-sm" onclick="submitExchange()">
-                    <span>立即兑换</span>
+                    <span data-i18n="exchangeNowBtn">立即兑换</span>
                 </button>
             </div>
 
             <!-- 阶梯汇率表 -->
             <div class="bg-tgCardBg p-6 rounded-2xl shadow-sm space-y-3">
                 <div class="flex justify-between items-center">
-                    <span class="font-bold text-sm text-gray-800">阶梯汇率表</span>
-                    <span class="text-xs text-gray-400">实时生效中</span>
+                    <span class="font-bold text-sm text-gray-800" data-i18n="tierTableTitle">阶梯汇率表</span>
+                    <span class="text-xs text-gray-400" data-i18n="realtimeActive">实时生效中</span>
                 </div>
                 <div class="grid grid-cols-3 text-center text-xs font-semibold text-gray-400 pb-1 border-b border-gray-100">
-                    <div>最低金额</div>
-                    <div>最高金额</div>
-                    <div>区间汇率</div>
+                    <div data-i18n="minAmount">最低金额</div>
+                    <div data-i18n="maxAmount">最高金额</div>
+                    <div data-i18n="tierRate">区间汇率</div>
                 </div>
                 <div class="space-y-2" id="tierList">
                     <div class="tier-row grid grid-cols-3 text-center py-2.5 rounded-xl bg-gray-50 text-xs items-center transition"><div class="font-bold text-gray-700">50</div><div class="text-gray-400">100</div><div class="font-bold text-blue-600 text-sm">1.05</div></div>
@@ -110,29 +116,29 @@
 
             <!-- 规则说明 -->
             <div class="text-xs text-gray-400 px-2 space-y-1">
-                <p class="font-semibold">💡 规则说明：</p>
-                <p>1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。</p>
-                <p>2. 提交后系统将在 30 分钟内完成订单撮合与额度发放。</p>
+                <p class="font-semibold" data-i18n="rulesTitle">💡 规则说明：</p>
+                <p data-i18n="rule1">1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。</p>
+                <p data-i18n="rule2">2. 提交后系统将在 30 分钟内完成订单撮合与额度发放。</p>
             </div>
         </div>
 
         <!-- 2. 我的订单与记录 -->
         <div id="tab-orders" class="hidden space-y-4">
             <div class="flex justify-between items-center px-1">
-                <div class="font-bold text-base text-gray-800">我的订单与记录</div>
+                <div class="font-bold text-base text-gray-800" data-i18n="myOrdersTitle">我的订单与记录</div>
                 <button type="button" onclick="manualRefreshData()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
-                    <i class="fa-solid fa-rotate" id="refreshIcon"></i> 刷新状态
+                    <i class="fa-solid fa-rotate" id="refreshIcon"></i> <span data-i18n="refreshStatus">刷新状态</span>
                 </button>
             </div>
             <div id="myOrdersList" class="space-y-3">
-                <div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">正在加载订单记录...</div>
+                <div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm" data-i18n="loadingOrders">正在加载订单记录...</div>
             </div>
         </div>
 
         <!-- 3. 订单详情页 -->
         <div id="page-order-detail" class="hidden space-y-4">
             <button type="button" onclick="switchTab('orders')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
-                <i class="fa-solid fa-chevron-left"></i> 返回订单列表
+                <i class="fa-solid fa-chevron-left"></i> <span data-i18n="backToOrders">返回订单列表</span>
             </button>
             <div id="orderDetailCard" class="bg-white p-6 rounded-2xl shadow-sm space-y-4"></div>
         </div>
@@ -140,23 +146,23 @@
         <!-- 4. 充值页面 -->
         <div id="page-deposit" class="hidden space-y-4">
             <button type="button" onclick="switchTab('shop')" class="text-xs text-gray-600 flex items-center gap-1 font-medium bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-sm cursor-pointer">
-                <i class="fa-solid fa-chevron-left"></i> 返回商城
+                <i class="fa-solid fa-chevron-left"></i> <span data-i18n="backToShop">返回商城</span>
             </button>
             <div class="bg-tgCardBg p-6 rounded-2xl shadow-sm text-center space-y-5">
                 <div class="space-y-1">
-                    <h3 class="font-bold text-xl text-gray-800">USDT 充值中心</h3>
-                    <p class="text-xs text-gray-400">当前 USDT 支付区块链网络协议为 TRC20</p>
+                    <h3 class="font-bold text-xl text-gray-800" data-i18n="depositCenterTitle">USDT 充值中心</h3>
+                    <p class="text-xs text-gray-400" data-i18n="depositProtocol">当前 USDT 支付区块链网络协议为 TRC20</p>
                 </div>
                 <div class="p-4 bg-gray-50 rounded-2xl border inline-block">
                     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ" class="w-52 h-52 mx-auto rounded-lg shadow-sm">
                 </div>
                 <div class="bg-gray-50 p-3.5 rounded-xl border text-left space-y-1">
-                    <div class="text-xs text-gray-400 font-medium">TRC20 收款地址 (点击可复制)：</div>
+                    <div class="text-xs text-gray-400 font-medium" data-i18n="depositAddressLabel">TRC20 收款地址 (点击可复制)：</div>
                     <div onclick="copyAddress('TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ')" class="text-xs font-mono font-bold text-gray-700 bg-white p-3 rounded-lg border cursor-pointer hover:bg-gray-50 transition">
                         TPcyZeBmJoiaBeL7LzpZWW7hq1Hgzw75LQ
                     </div>
                 </div>
-                <button type="button" onclick="submitDepositNotify()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition text-sm cursor-pointer">
+                <button type="button" onclick="submitDepositNotify()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition text-sm cursor-pointer" data-i18n="iHavePaidBtn">
                     我已充值
                 </button>
                 <div id="depositStatusBox" class="hidden text-left p-4 rounded-xl text-xs bg-yellow-50 border border-yellow-200 text-yellow-800"></div>
@@ -170,11 +176,11 @@
         <div class="max-w-2xl mx-auto flex justify-around py-3">
             <button type="button" id="nav-shop" onclick="switchTab('shop')" class="flex flex-col items-center gap-1 text-blue-600 text-xs font-bold transition cursor-pointer">
                 <i class="fa-solid fa-store text-lg"></i>
-                <span>兑换商城</span>
+                <span data-i18n="navShop">兑换商城</span>
             </button>
             <button type="button" id="nav-orders" onclick="switchTab('orders')" class="flex flex-col items-center gap-1 text-gray-400 text-xs font-medium transition cursor-pointer">
                 <i class="fa-solid fa-list-check text-lg"></i>
-                <span>我的订单</span>
+                <span data-i18n="navOrders">我的订单</span>
             </button>
         </div>
     </div>
@@ -182,6 +188,149 @@
     <script>
         const BIN_ID = "6af2b32cac6210605a7c00d8";
         const API_KEY = "$2a$10$7bEzkP8SMoaSgkbiFa7a2uU0O/STCDvsxPy/XtAO5Hh7gxT/iSHpG";
+        
+        // 多语言字典配置
+        const i18n = {
+            zh: {
+                shopTitle: "赚钱项目-官方兑换商城",
+                currentBalance: "当前账户余额 (USDT)",
+                depositBtn: "立即充值",
+                calcTitle: "阶梯兑换计算器",
+                calcPlaceholder: "请输入兑换金额",
+                rateSettlement: "阶梯汇率结算",
+                minExchangeDesc: "单笔最低兑换 50 USDT",
+                targetUnit: "博彩U",
+                exchangeNowBtn: "立即兑换",
+                tierTableTitle: "阶梯汇率表",
+                realtimeActive: "实时生效中",
+                minAmount: "最低金额",
+                maxAmount: "最高金额",
+                tierRate: "区间汇率",
+                rulesTitle: "💡 规则说明：",
+                rule1: "1. 单笔兑换金额须满 50 USDT，且不得低于账户当前可用余额。",
+                rule2: "2. 提交后系统将在 30 分钟内完成订单撮合与额度发放。",
+                myOrdersTitle: "我的订单与记录",
+                refreshStatus: "刷新状态",
+                loadingOrders: "正在加载订单记录...",
+                backToOrders: "返回订单列表",
+                backToShop: "返回商城",
+                depositCenterTitle: "USDT 充值中心",
+                depositProtocol: "当前 USDT 支付区块链网络协议为 TRC20",
+                depositAddressLabel: "TRC20 收款地址 (点击可复制)：",
+                iHavePaidBtn: "我已充值",
+                navShop: "兑换商城",
+                navOrders: "我的订单",
+                langBtnText: "🌐 EN",
+                alertInsufficient: "账户余额不足以支付当前兑换金额！",
+                alertSubmitSuccess: "提交成功！系统正在为您的兑换进行撮合，请在 30 分钟内完成，可在订单页面查看状态。",
+                alertDepositPrompt: "请输入您本次充值的 USDT 金额：",
+                alertInvalidAmount: "请输入有效金额",
+                alertDepositSuccess: "已成功提交充值通知，请等待管理员审核！",
+                alertCopied: "钱包地址已成功复制！",
+                alertSynced: "状态已刷新同步！",
+                statusSuccess: "已完成",
+                statusPending: "兑换中 (30分钟)",
+                statusRejected: "状态异常 (风控拦截)",
+                orderTypeDeposit: "📥 充值订单",
+                orderTypeExchange: "🔄 兑换订单",
+                amountLabel: "金额:",
+                timeLabel: "时间:",
+                noOrders: "暂无相关订单记录",
+                riskTitle: "⚠️ 系统安全提示：",
+                riskContent: "系统检测到您的账户近期操作过于频繁，触发系统风控。请保持余额充足并兑换相同金额订单，输入相同的收款地址，系统将自动为您解除风控合并下发两笔订单。",
+                orderIdLabel: "订单号",
+                orderTimeLabel: "下单时间",
+                payAmountLabel: "支付金额",
+                tierRateLabel: "区间汇率",
+                getAmountLabel: "应得",
+                addressTitle: "收款地址",
+                successTitle: "兑换成功",
+                pendingTitle: "订单兑换中",
+                successDesc: "额度已成功发放至您的账户",
+                pendingDesc: "系统正在全力撮合中，请在 30 分钟内完成"
+            },
+            en: {
+                shopTitle: "Official Exchange Store",
+                currentBalance: "Account Balance (USDT)",
+                depositBtn: "Deposit Now",
+                calcTitle: "Tiered Exchange Calculator",
+                calcPlaceholder: "Enter exchange amount",
+                rateSettlement: "Tiered Rate Settlement",
+                minExchangeDesc: "Min. exchange 50 USDT",
+                targetUnit: "Bonus U",
+                exchangeNowBtn: "Exchange Now",
+                tierTableTitle: "Tiered Rate Table",
+                realtimeActive: "Real-time Active",
+                minAmount: "Min Amount",
+                maxAmount: "Max Amount",
+                tierRate: "Rate",
+                rulesTitle: "💡 Rules & Instructions:",
+                rule1: "1. Minimum single exchange is 50 USDT, not lower than available balance.",
+                rule2: "2. System will match and distribute quota within 30 minutes after submission.",
+                myOrdersTitle: "My Orders & History",
+                refreshStatus: "Refresh",
+                loadingOrders: "Loading orders...",
+                backToOrders: "Back to Orders",
+                backToShop: "Back to Shop",
+                depositCenterTitle: "USDT Deposit Center",
+                depositProtocol: "Current USDT payment network protocol is TRC20",
+                depositAddressLabel: "TRC20 Deposit Address (Click to copy):",
+                iHavePaidBtn: "I Have Paid",
+                navShop: "Store",
+                navOrders: "Orders",
+                langBtnText: "🌐 中文",
+                alertInsufficient: "Insufficient account balance!",
+                alertSubmitSuccess: "Submitted successfully! System is matching your exchange, please complete within 30 minutes.",
+                alertDepositPrompt: "Please enter the USDT deposit amount:",
+                alertInvalidAmount: "Please enter a valid amount",
+                alertDepositSuccess: "Deposit notice submitted successfully! Please wait for admin approval.",
+                alertCopied: "Wallet address copied successfully!",
+                alertSynced: "Status synced successfully!",
+                statusSuccess: "Completed",
+                statusPending: "Processing (30m)",
+                statusRejected: "Abnormal (Risk Control)",
+                orderTypeDeposit: "📥 Deposit Order",
+                orderTypeExchange: "🔄 Exchange Order",
+                amountLabel: "Amount:",
+                timeLabel: "Time:",
+                noOrders: "No order records found",
+                riskTitle: "⚠️ System Security Notice:",
+                riskContent: "Frequent account operations detected. Risk control triggered. Please keep sufficient balance and submit an identical exchange order with the same address to automatically lift restrictions.",
+                orderIdLabel: "Order ID",
+                orderTimeLabel: "Order Time",
+                payAmountLabel: "Pay Amount",
+                tierRateLabel: "Tier Rate",
+                getAmountLabel: "Receive",
+                addressTitle: "Recipient Address",
+                successTitle: "Exchange Success",
+                pendingTitle: "Processing Exchange",
+                successDesc: "Quota successfully credited to your account",
+                pendingDesc: "System is matching, please complete within 30 minutes"
+            }
+        };
+
+        let currentLang = localStorage.getItem('app_lang') || 'zh';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('app_lang', currentLang);
+            applyLanguage();
+        }
+
+        function applyLanguage() {
+            const dict = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerText = dict[key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) el.placeholder = dict[key];
+            });
+            const langBtn = document.getElementById('langBtn');
+            if(langBtn) langBtn.innerText = dict.langBtnText;
+        }
+
         const tiers = [
             { min: 50, max: 100, rate: 1.05 },
             { min: 100, max: 500, rate: 1.13 },
@@ -229,6 +378,7 @@
             if (window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
             
             initUserIdentity();
+            applyLanguage(); // 应用多语言
             await fetchClientIP();
             
             let localCachedBal = localStorage.getItem('cache_balance_' + currentUserId);
@@ -270,7 +420,7 @@
             await fetchCloudData();
             setTimeout(() => {
                 if(icon) icon.classList.remove('fa-spin');
-                alert("状态已刷新同步！");
+                alert(i18n[currentLang].alertSynced);
             }, 500);
         }
 
@@ -337,7 +487,7 @@
 
             if (isNaN(inputVal) || inputVal < 50) {
                 if(resultEl) resultEl.innerText = "0.00";
-                if(descEl) descEl.innerText = "单笔最低兑换金额为 50";
+                if(descEl) descEl.innerText = i18n[currentLang].minExchangeDesc;
                 if(btnEl) { btnEl.disabled = true; btnEl.className = "w-full bg-gray-300 text-gray-500 font-bold py-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-not-allowed text-sm"; }
                 return;
             }
@@ -345,11 +495,10 @@
             let matchedTier = tiers.find(t => inputVal >= t.min && inputVal <= t.max) || tiers[tiers.length - 1];
             const calculated = (inputVal * matchedTier.rate).toFixed(2);
             if(resultEl) resultEl.innerText = calculated;
-            if(descEl) descEl.innerText = `当前区间汇率: ${matchedTier.rate}`;
+            if(descEl) descEl.innerText = (currentLang === 'zh' ? `当前区间汇率: ` : `Current Rate: `) + matchedTier.rate;
             if(btnEl) { btnEl.disabled = false; btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-sm"; }
         }
 
-        // 生成无连字符的长订单编号格式 (如 EXC2026111039157K8B)
         function generateComplexId(prefix) {
             const d = new Date();
             const yyyy = d.getFullYear();
@@ -370,7 +519,7 @@
             const getU = (amount * matchedTier.rate).toFixed(2);
 
             if (userBalance < amount) {
-                alert("账户余额不足以支付当前兑换金额！");
+                alert(i18n[currentLang].alertInsufficient);
                 return;
             }
 
@@ -380,7 +529,7 @@
             calculateRate();
 
             const newOrder = {
-                id: generateComplexId('EXC'), // 无连字符复杂编号
+                id: generateComplexId('EXC'),
                 uid: currentUserId,
                 name: userInfoName,
                 ip: clientIp,
@@ -398,18 +547,18 @@
             cloudData.balances[currentUserId] = userBalance;
             await pushCloudData();
 
-            alert("提交成功！系统正在为您的兑换进行撮合，请在 30 分钟内完成，可在订单页面查看状态。");
+            alert(i18n[currentLang].alertSubmitSuccess);
             switchTab('orders');
         }
 
         async function submitDepositNotify() {
-            const inputVal = prompt("请输入您本次充值的 USDT 金额：", "100");
+            const inputVal = prompt(i18n[currentLang].alertDepositPrompt, "100");
             if (!inputVal) return;
             const amount = parseFloat(inputVal);
-            if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
+            if (isNaN(amount) || amount <= 0) { alert(i18n[currentLang].alertInvalidAmount); return; }
 
             const newOrder = {
-                id: generateComplexId('DEP'), // 无连字符复杂编号
+                id: generateComplexId('DEP'),
                 uid: currentUserId,
                 name: userInfoName,
                 ip: clientIp,
@@ -423,31 +572,32 @@
             cloudData.orders.unshift(newOrder);
             await pushCloudData();
 
-            alert("已成功提交充值通知，请等待管理员审核！");
+            alert(i18n[currentLang].alertDepositSuccess);
             const box = document.getElementById('depositStatusBox');
             box.classList.remove('hidden');
-            box.innerHTML = "充值申请已提交（UID: " + currentUserId + "），正在等待管理员审核...";
+            box.innerHTML = (currentLang === 'zh' ? "充值申请已提交（UID: " : "Deposit submitted (UID: ") + currentUserId + (currentLang === 'zh' ? "），正在等待管理员审核..." : "), waiting for admin review...");
         }
 
         function renderMyOrders() {
             const container = document.getElementById('myOrdersList');
             let myOrders = (cloudData.orders || []).filter(o => o.uid === currentUserId);
+            const dict = i18n[currentLang];
 
             if (myOrders.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">暂无相关订单记录</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">${dict.noOrders}</div>`;
                 return;
             }
 
             container.innerHTML = myOrders.map(item => `
                 <div onclick="viewOrderDetail('${item.id}')" class="bg-white p-4 rounded-2xl shadow-sm space-y-2 text-xs border border-gray-100 cursor-pointer hover:border-blue-300 transition">
                     <div class="flex justify-between font-bold">
-                        <span class="text-gray-800">${item.type === 'deposit' ? '📥 充值订单' : '🔄 兑换订单'} (${item.id})</span>
+                        <span class="text-gray-800">${item.type === 'deposit' ? dict.orderTypeDeposit : dict.orderTypeExchange} (${item.id})</span>
                         <span class="${item.status === 'success' ? 'text-green-600' : item.status === 'pending' ? 'text-yellow-600' : 'text-red-600 font-bold'}">
-                            ${item.status === 'success' ? '已完成' : item.status === 'pending' ? '兑换中 (30分钟)' : '状态异常 (风控拦截)'}
+                            ${item.status === 'success' ? dict.statusSuccess : item.status === 'pending' ? dict.statusPending : dict.statusRejected}
                         </span>
                     </div>
-                    <div class="text-gray-500">金额: <span class="font-bold text-gray-800">${item.amount} USDT</span></div>
-                    <div class="text-[10px] text-gray-400">时间: ${item.time}</div>
+                    <div class="text-gray-500">${dict.amountLabel} <span class="font-bold text-gray-800">${item.amount} USDT</span></div>
+                    <div class="text-[10px] text-gray-400">${dict.timeLabel} ${item.time}</div>
                 </div>
             `).join('');
         }
@@ -460,25 +610,26 @@
             document.getElementById('page-order-detail').classList.remove('hidden');
 
             const card = document.getElementById('orderDetailCard');
+            const dict = i18n[currentLang];
             
             if (item.status === 'rejected') {
                 card.innerHTML = `
                     <div class="text-center space-y-2 pb-3 border-b">
                         <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold"><i class="fa-solid fa-xmark"></i></div>
-                        <h3 class="font-bold text-lg text-gray-800">状态异常</h3>
+                        <h3 class="font-bold text-lg text-gray-800">${dict.statusRejected}</h3>
                     </div>
                     <div class="bg-red-50 border border-red-200 p-4 rounded-2xl text-xs text-red-600 space-y-1.5 leading-relaxed">
-                        <p class="font-bold">⚠️ 系统安全提示：</p>
-                        <p>系统检测到您的账户近期操作过于频繁，触发系统风控。请保持余额充足并兑换相同金额订单，输入相同的收款地址，系统将自动为您解除风控合并下发两笔订单。</p>
+                        <p class="font-bold">${dict.riskTitle}</p>
+                        <p>${dict.riskContent}</p>
                     </div>
                     <div class="space-y-2 text-xs text-gray-600 pt-2">
-                        <div class="flex justify-between py-1 border-b"><span>订单号</span><span class="font-mono font-bold">${item.id}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>下单时间</span><span>${item.time}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>支付金额</span><span class="font-bold">${item.amount} USDT</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>区间汇率</span><span>${item.rate || 1.13}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>应得</span><span class="font-bold text-blue-600">${item.getU} 博彩U</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.orderIdLabel}</span><span class="font-mono font-bold">${item.id}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.orderTimeLabel}</span><span>${item.time}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.payAmountLabel}</span><span class="font-bold">${item.amount} USDT</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.tierRateLabel}</span><span>${item.rate || 1.13}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.getAmountLabel}</span><span class="font-bold text-blue-600">${item.getU} ${dict.targetUnit}</span></div>
                         <div class="py-1">
-                            <div class="text-gray-400 mb-1">收款地址</div>
+                            <div class="text-gray-400 mb-1">${dict.addressTitle}</div>
                             <div class="bg-gray-50 p-2.5 rounded-xl font-mono font-bold text-gray-700 break-all border">${item.address}</div>
                         </div>
                     </div>
@@ -489,16 +640,16 @@
                         <div class="w-12 h-12 ${item.status === 'success' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'} rounded-full flex items-center justify-center mx-auto text-xl font-bold">
                             <i class="fa-solid ${item.status === 'success' ? 'fa-check' : 'fa-clock'}"></i>
                         </div>
-                        <h3 class="font-bold text-lg text-gray-800">${item.status === 'success' ? '兑换成功' : '订单兑换中'}</h3>
-                        <p class="text-xs text-gray-400">${item.status === 'success' ? '额度已成功发放至您的账户' : '系统正在全力撮合中，请在 30 分钟内完成'}</p>
+                        <h3 class="font-bold text-lg text-gray-800">${item.status === 'success' ? dict.successTitle : dict.pendingTitle}</h3>
+                        <p class="text-xs text-gray-400">${item.status === 'success' ? dict.successDesc : dict.pendingDesc}</p>
                     </div>
                     <div class="space-y-2 text-xs text-gray-600 pt-2">
-                        <div class="flex justify-between py-1 border-b"><span>订单号</span><span class="font-mono font-bold">${item.id}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>下单时间</span><span>${item.time}</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>支付金额</span><span class="font-bold">${item.amount} USDT</span></div>
-                        <div class="flex justify-between py-1 border-b"><span>应得</span><span class="font-bold text-blue-600">${item.getU} 博彩U</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.orderIdLabel}</span><span class="font-mono font-bold">${item.id}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.orderTimeLabel}</span><span>${item.time}</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.payAmountLabel}</span><span class="font-bold">${item.amount} USDT</span></div>
+                        <div class="flex justify-between py-1 border-b"><span>${dict.getAmountLabel}</span><span class="font-bold text-blue-600">${item.getU} ${dict.targetUnit}</span></div>
                         <div class="py-1">
-                            <div class="text-gray-400 mb-1">收款地址</div>
+                            <div class="text-gray-400 mb-1">${dict.addressTitle}</div>
                             <div class="bg-gray-50 p-2.5 rounded-xl font-mono font-bold text-gray-700 break-all border">${item.address}</div>
                         </div>
                     </div>
@@ -507,7 +658,7 @@
         }
 
         function copyAddress(text) {
-            navigator.clipboard.writeText(text).then(() => alert("钱包地址已成功复制！"));
+            navigator.clipboard.writeText(text).then(() => alert(i18n[currentLang].alertCopied));
         }
     </script>
 </body>
