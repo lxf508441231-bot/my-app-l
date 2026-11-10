@@ -116,7 +116,7 @@
             </div>
         </div>
 
-        <!-- 2. 我的订单与记录 (新增手动刷新按钮) -->
+        <!-- 2. 我的订单与记录 -->
         <div id="tab-orders" class="hidden space-y-4">
             <div class="flex justify-between items-center px-1">
                 <div class="font-bold text-base text-gray-800">我的订单与记录</div>
@@ -238,7 +238,7 @@
             }
 
             await fetchCloudData();
-            setInterval(fetchCloudData, 4000); // 后台自动轮询
+            setInterval(fetchCloudData, 4000);
         };
 
         async function fetchCloudData() {
@@ -257,7 +257,6 @@
                     }
                     updateBalanceUI();
                     
-                    // 如果当前在订单页，顺便实时刷新订单展示
                     if (!document.getElementById('tab-orders').classList.contains('hidden')) {
                         renderMyOrders();
                     }
@@ -265,7 +264,6 @@
             } catch(e){}
         }
 
-        // 手动点击刷新按钮触发
         async function manualRefreshData() {
             const icon = document.getElementById('refreshIcon');
             if(icon) icon.classList.add('fa-spin');
@@ -351,6 +349,18 @@
             if(btnEl) { btnEl.disabled = false; btnEl.className = "w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 text-sm"; }
         }
 
+        // 生成无连字符的长订单编号格式 (如 EXC2026111039157K8B)
+        function generateComplexId(prefix) {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}${mm}${dd}`;
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+            return `${prefix}${dateStr}${randomNum}${randomStr}`;
+        }
+
         async function submitExchange() {
             const inputEl = document.getElementById('inputAmount');
             const amount = parseFloat(inputEl.value);
@@ -370,7 +380,7 @@
             calculateRate();
 
             const newOrder = {
-                id: 'EXC' + Date.now().toString().slice(-6),
+                id: generateComplexId('EXC'), // 无连字符复杂编号
                 uid: currentUserId,
                 name: userInfoName,
                 ip: clientIp,
@@ -399,7 +409,7 @@
             if (isNaN(amount) || amount <= 0) { alert("请输入有效金额"); return; }
 
             const newOrder = {
-                id: 'DEP' + Date.now().toString().slice(-6),
+                id: generateComplexId('DEP'), // 无连字符复杂编号
                 uid: currentUserId,
                 name: userInfoName,
                 ip: clientIp,
