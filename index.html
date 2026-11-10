@@ -116,9 +116,14 @@
             </div>
         </div>
 
-        <!-- 2. 我的订单与记录 -->
+        <!-- 2. 我的订单与记录 (新增手动刷新按钮) -->
         <div id="tab-orders" class="hidden space-y-4">
-            <div class="font-bold text-base text-gray-800 px-1">我的订单与记录</div>
+            <div class="flex justify-between items-center px-1">
+                <div class="font-bold text-base text-gray-800">我的订单与记录</div>
+                <button type="button" onclick="manualRefreshData()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-3.5 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm">
+                    <i class="fa-solid fa-rotate" id="refreshIcon"></i> 刷新状态
+                </button>
+            </div>
             <div id="myOrdersList" class="space-y-3">
                 <div class="text-center py-8 text-xs text-gray-400 bg-white rounded-2xl p-6 shadow-sm">正在加载订单记录...</div>
             </div>
@@ -190,14 +195,12 @@
         let clientIp = "获取中...";
         const deviceInfo = navigator.userAgent;
 
-        // 1. 本地浏览器持久化身份与IP绑定初始化
         function initUserIdentity() {
             if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 let tgUser = window.Telegram.WebApp.initDataUnsafe.user;
                 currentUserId = String(tgUser.id);
                 userInfoName = (tgUser.first_name || '') + ' ' + (tgUser.last_name || '');
             } else {
-                // 如果不是在Telegram内打开，使用浏览器的 localStorage 强力持久化保存，避免刷新丢失
                 let localId = localStorage.getItem('persistent_browser_uid');
                 if (!localId) {
                     localId = 'UID_' + Math.random().toString(36).substring(2, 9) + Date.now().toString().slice(-4);
@@ -208,7 +211,6 @@
             document.getElementById('userUidBadge').innerText = "UID: " + currentUserId;
         }
 
-        // 获取用户外网IP
         async function fetchClientIP() {
             try {
                 let res = await fetch('https://api.ipify.org?format=json');
@@ -229,7 +231,6 @@
             initUserIdentity();
             await fetchClientIP();
             
-            // 优先从本地加载缓存余额，避免刷新瞬间归零
             let localCachedBal = localStorage.getItem('cache_balance_' + currentUserId);
             if (localCachedBal !== null) {
                 userBalance = parseFloat(localCachedBal);
@@ -237,7 +238,7 @@
             }
 
             await fetchCloudData();
-            setInterval(fetchCloudData, 3000); // 持续联网同步云端
+            setInterval(fetchCloudData, 4000); // 后台自动轮询
         };
 
         async function fetchCloudData() {
@@ -249,15 +250,30 @@
                     let json = await res.json();
                     cloudData = json.record || { orders: [], balances: {} };
                     
-                    // 如果云端有该用户的余额，以云端（后台修改后）为准；否则使用本地缓存
                     if (cloudData.balances && cloudData.balances[currentUserId] !== undefined) {
                         userBalance = parseFloat(cloudData.balances[currentUserId]);
                     } else {
                         userBalance = parseFloat(localStorage.getItem('cache_balance_' + currentUserId)) || 0.00;
                     }
                     updateBalanceUI();
+                    
+                    // 如果当前在订单页，顺便实时刷新订单展示
+                    if (!document.getElementById('tab-orders').classList.contains('hidden')) {
+                        renderMyOrders();
+                    }
                 }
             } catch(e){}
+        }
+
+        // 手动点击刷新按钮触发
+        async function manualRefreshData() {
+            const icon = document.getElementById('refreshIcon');
+            if(icon) icon.classList.add('fa-spin');
+            await fetchCloudData();
+            setTimeout(() => {
+                if(icon) icon.classList.remove('fa-spin');
+                alert("状态已刷新同步！");
+            }, 500);
         }
 
         async function pushCloudData() {
@@ -275,7 +291,6 @@
 
         function updateBalanceUI() {
             document.getElementById('userBalanceDisplay').innerText = userBalance.toFixed(2);
-            // 强力本地缓存绑定：每次更新立刻写入浏览器的 localStorage
             localStorage.setItem('cache_balance_' + currentUserId, userBalance);
             calculateRate();
         }
